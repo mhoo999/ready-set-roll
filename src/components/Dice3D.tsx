@@ -54,10 +54,8 @@ export default function Dice3D({
   const finalY = initialY - FRAMES * ITEM_H
 
   useEffect(() => {
-    if (phase !== 'ROLLING') {
-      calledRef.current = false
-      return
-    }
+    // Only reset and start animation on ROLLING — don't touch calledRef on other phases
+    if (phase !== 'ROLLING') return
     if (players.length === 0 || pendingWinnerIdx === null) return
 
     calledRef.current = false
@@ -103,7 +101,8 @@ export default function Dice3D({
           animate={{ y: finalY }}
           transition={{ duration: 2.2, ease: [0.05, 0.85, 0.25, 1.0] }}
           onAnimationComplete={() => {
-            if (!calledRef.current) {
+            // Guard: only fire resolveRoll while still in ROLLING phase
+            if (!calledRef.current && phase === 'ROLLING') {
               calledRef.current = true
               onAnimationComplete()
             }
@@ -127,17 +126,18 @@ export default function Dice3D({
             </div>
           ))}
         </motion.div>
-      </div>
 
-      {isResult && revealed && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="flex-none text-center text-[10px] text-yellow-400/80 uppercase tracking-widest font-semibold"
-        >
-          당첨!
-        </motion.div>
-      )}
+        {/* Absolute so it doesn't affect viewport height and re-trigger ResizeObserver */}
+        {isResult && revealed && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="absolute bottom-2 inset-x-0 text-center text-[10px] text-yellow-400/80 uppercase tracking-widest font-semibold z-20 pointer-events-none"
+          >
+            당첨!
+          </motion.div>
+        )}
+      </div>
     </div>
   )
 }
