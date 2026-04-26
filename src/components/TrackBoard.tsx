@@ -14,12 +14,12 @@ type Props = {
 export default function TrackBoard({ players, target, currentRollWinnerId, winnerId }: Props) {
   return (
     <div
-      className="w-full rounded-2xl border border-white/10 bg-gradient-to-b from-[#1a1040] to-[#0d0820] p-4"
+      className="w-full h-full rounded-2xl border border-white/10 bg-gradient-to-b from-[#1a1040] to-[#0d0820] p-4"
       style={{ perspective: '800px' }}
     >
-      <div style={{ transform: 'rotateX(6deg)', transformStyle: 'preserve-3d' }}>
+      <div className="h-full flex flex-col" style={{ transform: 'rotateX(6deg)', transformStyle: 'preserve-3d' }}>
         {/* Column headers */}
-        <div className="flex mb-2 pl-28">
+        <div className="flex-none flex mb-2 pl-28">
           {Array.from({ length: target + 1 }, (_, i) => (
             <div
               key={i}
@@ -33,7 +33,7 @@ export default function TrackBoard({ players, target, currentRollWinnerId, winne
         </div>
 
         {/* Player lanes */}
-        <div className="flex flex-col gap-1.5">
+        <div className="flex-1 flex flex-col gap-1.5">
           {players.map((player, laneIdx) => {
             const isActive = player.id === currentRollWinnerId
             const isWinner = player.id === winnerId
@@ -42,7 +42,7 @@ export default function TrackBoard({ players, target, currentRollWinnerId, winne
               <div
                 key={player.id}
                 className={`
-                  flex items-center rounded-lg h-14 px-2
+                  flex items-center rounded-lg flex-1 min-h-0 px-2
                   ${isWinner ? 'bg-yellow-400/10 border border-yellow-400/40' : isActive ? 'bg-purple-500/10 border border-purple-500/30' : 'bg-white/5 border border-white/5'}
                   transition-colors duration-300
                 `}
@@ -60,12 +60,12 @@ export default function TrackBoard({ players, target, currentRollWinnerId, winne
                 </div>
 
                 {/* Track cells */}
-                <div className="flex flex-1 relative">
+                <div className="flex flex-1 h-full relative">
                   {Array.from({ length: target + 1 }, (_, i) => (
                     <div
                       key={i}
                       className={`
-                        flex-1 min-w-0 h-10 flex items-center justify-center
+                        flex-1 min-w-0 h-full flex items-center justify-center
                         border-l border-white/5 relative
                         ${i === target ? 'bg-yellow-400/5' : ''}
                       `}
