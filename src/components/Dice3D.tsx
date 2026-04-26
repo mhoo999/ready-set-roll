@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { type Player, type GamePhase } from '@/lib/gameLogic'
-import { playTick, playRoll } from '@/lib/soundManager'
+import { playRoll } from '@/lib/soundManager'
 
 type Props = {
   players: Player[]
@@ -13,71 +13,40 @@ type Props = {
   onAnimationComplete: () => void
 }
 
-type SlotItem = { name: string; id: number; duration: number }
+const ITEM_H = 80   // px — must match h-20 (5rem = 80px)
+const FRAMES = 10   // names to scroll past
+
+function buildReel(players: Player[]): string[] {
+  const start = Math.floor(Math.random() * players.length)
+  return Array.from({ length: FRAMES + 1 }, (_, i) =>
+    players[(start + i) % players.length].name
+  )
+}
 
 export default function Dice3D({ players, phase, currentRollWinnerId, soundEnabled, onAnimationComplete }: Props) {
-  const [current, setCurrent] = useState<SlotItem>({ name: '?', id: 0, duration: 200 })
-  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
+  const [reel, setReel] = useState<{ key: number; names: string[] }>({ key: 0, names: ['?'] })
+  const [winnerName, setWinnerName] = useState<string | null>(null)
   const calledRef = useRef(false)
-  const idRef = useRef(0)
-
-  function clearTimers() {
-    timersRef.current.forEach(clearTimeout)
-    timersRef.current = []
-  }
 
   useEffect(() => {
     if (phase !== 'ROLLING') {
-      clearTimers()
       calledRef.current = false
       return
     }
     if (players.length === 0) return
 
     calledRef.current = false
+    setWinnerName(null)
     if (soundEnabled) playRoll()
 
-    const TOTAL_STEPS = 8
-    const MULTIPLIER = 1.45
-    let interval = 60
-    let step = 0
-
-    function tick() {
-      const name = players[Math.floor(Math.random() * players.length)].name
-      idRef.current += 1
-      const dur = interval
-      setCurrent({ name, id: idRef.current, duration: dur })
-      if (soundEnabled) playTick()
-
-      step++
-      interval = Math.round(interval * MULTIPLIER)
-
-      if (step < TOTAL_STEPS) {
-        const t = setTimeout(tick, dur)
-        timersRef.current.push(t)
-      } else {
-        if (!calledRef.current) {
-          calledRef.current = true
-          // Wait for last name to visually land, then resolve
-          const t = setTimeout(onAnimationComplete, dur + 120)
-          timersRef.current.push(t)
-        }
-      }
-    }
-
-    tick()
-    return clearTimers
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setReel((prev) => ({ key: prev.key + 1, names: buildReel(players) }))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase])
 
-  // Show winner when resolved
   useEffect(() => {
     if ((phase === 'RESULT' || phase === 'FINISHED') && currentRollWinnerId) {
       const winner = players.find((p) => p.id === currentRollWinnerId)
-      if (winner) {
-        idRef.current += 1
-        setCurrent({ name: winner.name, id: idRef.current, duration: 350 })
-      }
+      if (winner) setWinnerName(winner.name)
     }
   }, [phase, currentRollWinnerId, players])
 
@@ -86,11 +55,9 @@ export default function Dice3D({ players, phase, currentRollWinnerId, soundEnabl
 
   return (
     <div className="flex flex-col items-center gap-2">
-      {/* Slot reel window */}
       <div
         className={`
-          relative w-32 h-20 overflow-hidden rounded-xl border-2 transition-colors duration-300
-          bg-[#0d0820]
+          relative w-32 h-20 overflow-hidden rounded-xl border-2 transition-colors duration-300 bg-[#0d0820]
           ${isResult
             ? 'border-yellow-400/70 shadow-[0_0_20px_rgba(245,166,35,0.4)]'
             : isRolling
@@ -99,33 +66,61 @@ export default function Dice3D({ players, phase, currentRollWinnerId, soundEnabl
           }
         `}
       >
-        {/* Top fade — hides partially visible name above */}
-        <div className="absolute top-0 inset-x-0 h-6 bg-gradient-to-b from-[#0d0820] to-transparent z-10 pointer-events-none" />
-        {/* Bottom fade — hides partially visible name below */}
-        <div className="absolute bottom-0 inset-x-0 h-6 bg-gradient-to-t from-[#0d0820] to-transparent z-10 pointer-events-none" />
+        {/* Top gradient — masks names entering from above */}
+        <div className="absolute top-0 inset-x-0 h-7 bg-gradient-to-b from-[#0d0820] to-transparent z-10 pointer-events-none" />
+        {/* Bottom gradient — masks names exiting below */}
+        <div className="absolute bottom-0 inset-x-0 h-7 bg-gradient-to-t from-[#0d0820] to-transparent z-10 pointer-events-none" />
 
-        <AnimatePresence initial={false}>
-          <motion.div
-            key={current.id}
-            initial={{ y: '-100%', opacity: 0.5 }}
-            animate={{ y: '0%', opacity: 1 }}
-            exit={{ y: '100%', opacity: 0.5 }}
-            transition={{ duration: current.duration / 1000, ease: 'easeOut' }}
-            className="absolute inset-0 flex items-center justify-center px-2"
-          >
-            <span
-              className={`
-                font-black text-sm text-center break-words leading-tight select-none
-                ${isResult ? 'text-yellow-300' : 'text-white'}
-              `}
+        {/* Tape: single continuous scroll, remounts each roll via key */}
+        <motion.div
+          key={reel.key}
+          className="flex flex-col"
+          style={{ willChange: 'transform' }}
+          initial={{ y: 0 }}
+          animate={{ y: -(FRAMES * ITEM_H) }}
+          transition={{
+            duration: 2.2,
+            ease: [0.05, 0.85, 0.25, 1.0],
+          }}
+          onAnimationComplete={() => {
+            if (!calledRef.current) {
+              calledRef.current = true
+              onAnimationComplete()
+            }
+          }}
+        >
+          {reel.names.map((name, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-center px-2 flex-shrink-0"
+              style={{ height: ITEM_H }}
             >
-              {current.name}
-            </span>
-          </motion.div>
+              <span className="font-black text-sm text-center break-words leading-tight text-white select-none">
+                {name}
+              </span>
+            </div>
+          ))}
+        </motion.div>
+
+        {/* Winner overlay — slides in from top after resolve */}
+        <AnimatePresence>
+          {winnerName && (
+            <motion.div
+              className="absolute inset-0 flex items-center justify-center bg-[#0d0820]/95 z-20 px-2"
+              initial={{ y: '-100%' }}
+              animate={{ y: '0%' }}
+              exit={{ y: '-100%' }}
+              transition={{ duration: 0.38, ease: 'easeOut' }}
+            >
+              <span className="font-black text-sm text-center break-words leading-tight text-yellow-300 select-none">
+                {winnerName}
+              </span>
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
 
-      {isResult && (
+      {isResult && winnerName && (
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}

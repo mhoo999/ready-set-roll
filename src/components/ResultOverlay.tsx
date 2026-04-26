@@ -20,25 +20,8 @@ export default function ResultOverlay() {
 
     if (soundEnabled) playWin()
 
-    const end = Date.now() + 3000
-    const fire = () => {
-      confetti({
-        particleCount: 60,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0, y: 0.65 },
-        colors: ['#7C3AED', '#F5A623', '#EC4899', '#fff'],
-      })
-      confetti({
-        particleCount: 60,
-        angle: 120,
-        spread: 55,
-        origin: { x: 1, y: 0.65 },
-        colors: ['#7C3AED', '#F5A623', '#EC4899', '#fff'],
-      })
-      if (Date.now() < end) requestAnimationFrame(fire)
-    }
-    fire()
+    confetti({ particleCount: 120, angle: 60, spread: 70, origin: { x: 0, y: 0.6 }, colors: ['#7C3AED', '#F5A623', '#EC4899', '#fff'] })
+    confetti({ particleCount: 120, angle: 120, spread: 70, origin: { x: 1, y: 0.6 }, colors: ['#7C3AED', '#F5A623', '#EC4899', '#fff'] })
   }, [phase, winner, soundEnabled])
 
   return (

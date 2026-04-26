@@ -3,37 +3,15 @@
 import { useGameStore } from '@/store/useGameStore'
 
 export default function ControlPanel() {
-  const delayMs = useGameStore((s) => s.delayMs)
   const target = useGameStore((s) => s.target)
   const soundEnabled = useGameStore((s) => s.soundEnabled)
   const autoStart = useGameStore((s) => s.autoStart)
-  const setDelay = useGameStore((s) => s.setDelay)
   const setTarget = useGameStore((s) => s.setTarget)
   const setSoundEnabled = useGameStore((s) => s.setSoundEnabled)
   const setAutoStart = useGameStore((s) => s.setAutoStart)
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Delay slider */}
-      <div>
-        <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">
-          롤 간격 <span className="text-purple-300 ml-1">{(delayMs / 1000).toFixed(1)}s</span>
-        </label>
-        <input
-          type="range"
-          min={1000}
-          max={4000}
-          step={100}
-          value={delayMs}
-          onChange={(e) => setDelay(Number(e.target.value))}
-          className="w-full accent-purple-500"
-        />
-        <div className="flex justify-between text-[10px] text-white/20 mt-1">
-          <span>빠름 1s</span>
-          <span>느림 4s</span>
-        </div>
-      </div>
-
       {/* Target squares */}
       <div>
         <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">

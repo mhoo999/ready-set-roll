@@ -18,7 +18,6 @@ type GameState = {
 
 type GameActions = {
   setPlayerNames: (raw: string) => void
-  setDelay: (ms: number) => void
   setTarget: (n: number) => void
   setSoundEnabled: (v: boolean) => void
   setAutoStart: (v: boolean) => void
@@ -47,7 +46,6 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => ({
     const names = raw.split(',').map((s) => s.trim()).filter(Boolean)
     set({ playerNames: names })
   },
-  setDelay: (ms) => set({ delayMs: ms }),
   setTarget: (n) => set({ target: n }),
   setSoundEnabled: (v) => set({ soundEnabled: v }),
   setAutoStart: (v) => set({ autoStart: v }),
