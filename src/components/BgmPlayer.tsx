@@ -8,25 +8,22 @@ export default function BgmPlayer() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
-    if (!audioRef.current) {
-      audioRef.current = new Audio('/bgm/8bit-racing.wav')
-      audioRef.current.loop = true
-      audioRef.current.volume = 0.5
-    }
+    const audio = audioRef.current
+    if (!audio) return
+
+    audio.volume = 0.5
 
     if (bgmEnabled) {
-      audioRef.current.play().catch((err) => {
-        console.warn('BGM play failed, usually due to browser policy:', err)
-      })
+      const playPromise = audio.play()
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          console.warn('BGM play failed:', err)
+        })
+      }
     } else {
-      audioRef.current.pause()
-    }
-
-    return () => {
-      // Don't stop on unmount if we want continuous playback across pages,
-      // but since BgmPlayer is in root layout, it won't unmount on page navigation.
+      audio.pause()
     }
   }, [bgmEnabled])
 
-  return null
+  return <audio ref={audioRef} src="/bgm/8bit-racing.wav" loop preload="auto" />
 }
