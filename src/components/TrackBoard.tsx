@@ -14,10 +14,10 @@ type Props = {
 export default function TrackBoard({ players, target, currentRollWinnerId, winnerId }: Props) {
   return (
     <div
-      className="w-full h-full rounded-2xl border border-white/10 bg-gradient-to-b from-[#1a1040] to-[#0d0820] p-4"
+      className="w-full h-full rounded-2xl border border-white/10 bg-gradient-to-b from-[#1a1040] to-[#0d0820] p-4 flex flex-col justify-center"
       style={{ perspective: '700px' }}
     >
-      <div className="w-[90%] mx-auto h-full flex flex-col" style={{ transform: 'rotateX(9deg)', transformStyle: 'preserve-3d' }}>
+      <div className="w-[90%] mx-auto h-[90%] flex flex-col" style={{ transform: 'rotateX(9deg)', transformStyle: 'preserve-3d' }}>
         {/* Column headers */}
         <div className="flex-none flex mb-2 pl-28">
           {Array.from({ length: target + 1 }, (_, i) => (
