@@ -8,6 +8,7 @@ import TrackBoard from '@/components/TrackBoard'
 import Dice3D from '@/components/Dice3D'
 import ProgressBar from '@/components/ProgressBar'
 import LogPanel from '@/components/LogPanel'
+import BroadcastPanel from '@/components/BroadcastPanel'
 import ResultOverlay from '@/components/ResultOverlay'
 
 export default function GamePage() {
@@ -51,11 +52,11 @@ export default function GamePage() {
         />
       </div>
 
-      {/* Bottom strip: Slot(70%) | Log+Button(30%) — 30% of screen height */}
+      {/* Bottom strip: Slot(40%) | Broadcast(40%) | Log+Button(20%) — 30% of screen height */}
       <div className="flex-[3] min-h-0 overflow-hidden flex border-t border-white/5">
 
-        {/* Slot area — 70% */}
-        <div className="h-full flex flex-col gap-2 px-4 py-3" style={{ width: '70%' }}>
+        {/* Slot area — 40% */}
+        <div className="h-full flex flex-col gap-2 px-4 py-3" style={{ width: '40%' }}>
           <Dice3D
             players={players}
             phase={phase}
@@ -67,8 +68,13 @@ export default function GamePage() {
           <ProgressBar phase={phase} delayMs={delayMs} />
         </div>
 
-        {/* Log area — 30% */}
-        <div className="h-full flex flex-col overflow-hidden" style={{ width: '30%' }}>
+        {/* Broadcast area — 40% */}
+        <div className="h-full" style={{ width: '40%' }}>
+          <BroadcastPanel />
+        </div>
+
+        {/* Log area — 20% */}
+        <div className="h-full flex flex-col overflow-hidden" style={{ width: '20%' }}>
           <button
             onClick={handleReset}
             className="flex-none w-full text-xs font-semibold text-white/40 hover:text-white/70

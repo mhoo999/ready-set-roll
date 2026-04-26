@@ -3,7 +3,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Ready Set Roll',
-  description: '방송용 이름 기반 RNG 레이스 게임',
+  description: '추첨 시뮬레이터',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

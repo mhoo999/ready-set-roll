@@ -45,7 +45,7 @@ export default function ResultOverlay() {
             <div className="text-6xl mb-4">🏆</div>
             <p className="text-white/60 text-sm uppercase tracking-widest mb-2">Winner</p>
             <h1 className="text-4xl font-black text-yellow-300 mb-2 break-words">{winner.name}</h1>
-            <p className="text-white/40 text-sm mb-8">결승선 도달!</p>
+            <p className="text-white/40 text-sm mb-8">결승선 도달! 축하합니다!</p>
             <button
               onClick={() => { resetGame(); router.push('/') }}
               className="bg-purple-600 hover:bg-purple-500 active:scale-95 text-white font-bold px-8 py-3 rounded-xl transition-all duration-150 text-base"
