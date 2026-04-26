@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation'
 import { useGameStore } from '@/store/useGameStore'
 import InputPanel from '@/components/InputPanel'
 import ControlPanel from '@/components/ControlPanel'
-import { computeTarget } from '@/lib/gameLogic'
 
 export default function SetupPage() {
   const router = useRouter()
@@ -13,7 +12,6 @@ export default function SetupPage() {
   const startGame = useGameStore((s) => s.startGame)
 
   const count = playerNames.length
-  const effective = computeTarget(count, target)
   const canStart = count >= 2
 
   function handleStart() {
@@ -51,7 +49,7 @@ export default function SetupPage() {
             }
           `}
         >
-          {canStart ? `🎲 게임 시작 (${count}명 · ${effective}칸)` : '참가자를 2명 이상 입력하세요'}
+          {canStart ? `🎲 게임 시작 (${count}명 · ${target}칸)` : '참가자를 2명 이상 입력하세요'}
         </button>
       </div>
 

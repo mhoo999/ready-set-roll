@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { type Player, type GamePhase, parsePlayers, computeTarget, pickWinnerIndex } from '@/lib/gameLogic'
+import { type Player, type GamePhase, parsePlayers, pickWinnerIndex } from '@/lib/gameLogic'
 
 type GameState = {
   playerNames: string[]
@@ -14,7 +14,6 @@ type GameState = {
   currentRollWinnerId: string | null
   history: string[]
   rollCount: number
-  effectiveTarget: number
 }
 
 type GameActions = {
@@ -33,7 +32,7 @@ type GameActions = {
 export const useGameStore = create<GameState & GameActions>()((set, get) => ({
   playerNames: [],
   delayMs: 2000,
-  target: 10,
+  target: 12,
   soundEnabled: true,
   autoStart: true,
   players: [],
@@ -43,7 +42,6 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => ({
   currentRollWinnerId: null,
   history: [],
   rollCount: 0,
-  effectiveTarget: 10,
 
   setPlayerNames: (raw) => {
     const names = raw.split(',').map((s) => s.trim()).filter(Boolean)
@@ -55,12 +53,10 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => ({
   setAutoStart: (v) => set({ autoStart: v }),
 
   startGame: () => {
-    const { playerNames, target } = get()
+    const { playerNames } = get()
     const players = parsePlayers(playerNames)
-    const effective = computeTarget(players.length, target)
     set({
       players,
-      effectiveTarget: effective,
       phase: 'START',
       history: [],
       rollCount: 0,
@@ -73,13 +69,13 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => ({
   beginRoll: () => set({ phase: 'ROLLING', currentRollWinnerId: null }),
 
   resolveRoll: () => {
-    const { players, lastWinnerId, effectiveTarget, history, rollCount } = get()
+    const { players, lastWinnerId, target, history, rollCount } = get()
     const idx = pickWinnerIndex(players.length)
     const selected = players[idx]
     const isCombo = selected.id === lastWinnerId
     const move = isCombo ? 2 : 1
     const newPosition = selected.position + move
-    const won = newPosition >= effectiveTarget
+    const won = newPosition >= target
 
     const updatedPlayers = players.map((p) =>
       p.id === selected.id ? { ...p, position: newPosition } : p
@@ -114,6 +110,5 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => ({
       currentRollWinnerId: null,
       history: [],
       rollCount: 0,
-      effectiveTarget: get().target,
     }),
 }))

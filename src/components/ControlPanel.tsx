@@ -1,21 +1,16 @@
 'use client'
 
 import { useGameStore } from '@/store/useGameStore'
-import { computeTarget } from '@/lib/gameLogic'
 
 export default function ControlPanel() {
   const delayMs = useGameStore((s) => s.delayMs)
   const target = useGameStore((s) => s.target)
   const soundEnabled = useGameStore((s) => s.soundEnabled)
   const autoStart = useGameStore((s) => s.autoStart)
-  const playerNames = useGameStore((s) => s.playerNames)
   const setDelay = useGameStore((s) => s.setDelay)
   const setTarget = useGameStore((s) => s.setTarget)
   const setSoundEnabled = useGameStore((s) => s.setSoundEnabled)
   const setAutoStart = useGameStore((s) => s.setAutoStart)
-
-  const count = playerNames.length
-  const effective = computeTarget(count, target)
 
   return (
     <div className="flex flex-col gap-4">
@@ -42,8 +37,7 @@ export default function ControlPanel() {
       {/* Target squares */}
       <div>
         <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">
-          목표 칸 <span className="text-purple-300 ml-1">{effective}칸</span>
-          {effective < target && <span className="text-yellow-400 ml-1 text-[10px]">(자동조정)</span>}
+          목표 칸 <span className="text-purple-300 ml-1">{target}칸</span>
         </label>
         <input
           type="number"

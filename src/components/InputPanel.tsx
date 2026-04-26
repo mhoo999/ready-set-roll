@@ -2,17 +2,13 @@
 
 import { useState } from 'react'
 import { useGameStore } from '@/store/useGameStore'
-import { computeTarget } from '@/lib/gameLogic'
 
 export default function InputPanel() {
   const playerNames = useGameStore((s) => s.playerNames)
-  const target = useGameStore((s) => s.target)
   const setPlayerNames = useGameStore((s) => s.setPlayerNames)
   const [raw, setRaw] = useState(playerNames.join(', '))
 
   const count = playerNames.length
-  const effective = computeTarget(count, target)
-  const autoBalanced = effective < target
 
   return (
     <div className="flex flex-col gap-3">
@@ -39,11 +35,6 @@ export default function InputPanel() {
             {count}명
           </span>
         </span>
-        {autoBalanced && (
-          <span className="text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded-full">
-            ⚡ 자동조정 → {effective}칸
-          </span>
-        )}
         {count < 2 && (
           <span className="text-red-400">최소 2명 필요</span>
         )}

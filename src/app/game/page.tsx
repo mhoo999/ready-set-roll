@@ -19,7 +19,7 @@ export default function GamePage() {
 
   const phase = useGameStore((s) => s.phase)
   const players = useGameStore((s) => s.players)
-  const effectiveTarget = useGameStore((s) => s.effectiveTarget)
+  const target = useGameStore((s) => s.target)
   const currentRollWinnerId = useGameStore((s) => s.currentRollWinnerId)
   const winnerId = useGameStore((s) => s.winnerId)
   const history = useGameStore((s) => s.history)
@@ -65,7 +65,7 @@ export default function GamePage() {
           </span>
         </div>
         <div className="text-xs text-white/30">
-          목표 <span className="text-white/60 font-mono">{effectiveTarget}칸</span>
+          목표 <span className="text-white/60 font-mono">{target}칸</span>
         </div>
       </div>
 
@@ -78,7 +78,7 @@ export default function GamePage() {
           <div className="flex-1 overflow-auto">
             <TrackBoard
               players={players}
-              target={effectiveTarget}
+              target={target}
               currentRollWinnerId={currentRollWinnerId}
               winnerId={winnerId}
             />
