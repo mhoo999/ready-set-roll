@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { motion } from 'framer-motion'
 import { type Player, type GamePhase } from '@/lib/gameLogic'
 import { playTick, playRoll } from '@/lib/soundManager'
 
@@ -13,29 +12,9 @@ type Props = {
   onAnimationComplete: () => void
 }
 
-const FACE_ROTATIONS = [
-  { rotateX: 0, rotateY: 0 },      // front
-  { rotateX: 0, rotateY: 180 },    // back
-  { rotateX: 0, rotateY: -90 },    // left
-  { rotateX: 0, rotateY: 90 },     // right
-  { rotateX: -90, rotateY: 0 },    // top
-  { rotateX: 90, rotateY: 0 },     // bottom
-]
-
-function getFaceNames(players: Player[]): string[] {
-  if (players.length === 0) return ['?', '?', '?', '?', '?', '?']
-  return Array.from({ length: 6 }, (_, i) => players[i % players.length].name)
-}
-
-function getWinnerFaceRotation(): { rotateX: number; rotateY: number } {
-  // Top face shows winner: rotateX(90) puts top face forward-ish
-  // We rotate so face index 4 (top, rotateX: -90) becomes visible
-  return { rotateX: 90, rotateY: 0 }
-}
-
 export default function Dice3D({ players, phase, currentRollWinnerId, soundEnabled, onAnimationComplete }: Props) {
-  const [rotation, setRotation] = useState({ rotateX: 0, rotateY: 0 })
-  const [faceNames, setFaceNames] = useState<string[]>(getFaceNames(players))
+  const [displayName, setDisplayName] = useState('?')
+  const [flash, setFlash] = useState(false)
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
   const calledRef = useRef(false)
 
@@ -43,10 +22,6 @@ export default function Dice3D({ players, phase, currentRollWinnerId, soundEnabl
     timersRef.current.forEach(clearTimeout)
     timersRef.current = []
   }
-
-  useEffect(() => {
-    setFaceNames(getFaceNames(players))
-  }, [players])
 
   useEffect(() => {
     if (phase !== 'ROLLING') {
@@ -58,19 +33,18 @@ export default function Dice3D({ players, phase, currentRollWinnerId, soundEnabl
     calledRef.current = false
     if (soundEnabled) playRoll()
 
-    let interval = 80
+    let interval = 60
     let step = 0
-    const totalSteps = 22
+    const totalSteps = 14
 
     function tick() {
-      setFaceNames(getFaceNames(players))
-      setRotation({
-        rotateX: Math.floor(Math.random() * 4) * 90 + step * 15,
-        rotateY: Math.floor(Math.random() * 4) * 90 + step * 20,
-      })
+      const name = players[Math.floor(Math.random() * players.length)].name
+      setDisplayName(name)
+      setFlash((f) => !f)
       if (soundEnabled && step % 2 === 0) playTick()
+
       step++
-      interval = Math.round(interval * 1.18)
+      interval = Math.round(interval * 1.22)
 
       if (step < totalSteps) {
         const t = setTimeout(tick, interval)
@@ -78,11 +52,9 @@ export default function Dice3D({ players, phase, currentRollWinnerId, soundEnabl
       } else {
         if (!calledRef.current) {
           calledRef.current = true
-          // Settle the dice before resolving
-          setRotation(getWinnerFaceRotation())
           const t = setTimeout(() => {
             onAnimationComplete()
-          }, 400)
+          }, 200)
           timersRef.current.push(t)
         }
       }
@@ -92,76 +64,49 @@ export default function Dice3D({ players, phase, currentRollWinnerId, soundEnabl
     timersRef.current.push(t)
 
     return clearTimers
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase])
 
-  // After resolving, update top face to show winner name
   useEffect(() => {
-    if (phase === 'RESULT' || phase === 'FINISHED') {
-      if (currentRollWinnerId !== null) {
-        const winner = players.find((p) => p.id === currentRollWinnerId)
-        if (winner) {
-          setFaceNames((prev) => {
-            const next = [...prev]
-            // face index 4 = top face (shown when rotateX=90)
-            next[4] = winner.name
-            return next
-          })
-          setRotation(getWinnerFaceRotation())
-        }
-      }
+    if ((phase === 'RESULT' || phase === 'FINISHED') && currentRollWinnerId) {
+      const winner = players.find((p) => p.id === currentRollWinnerId)
+      if (winner) setDisplayName(winner.name)
     }
   }, [phase, currentRollWinnerId, players])
 
+  const isResult = phase === 'RESULT' || phase === 'FINISHED'
+  const isRolling = phase === 'ROLLING'
+
   return (
-    <div className="flex flex-col items-center gap-3">
-      <div className="relative" style={{ width: 120, height: 120, perspective: 600 }}>
-        <motion.div
-          className="relative w-full h-full"
-          style={{ transformStyle: 'preserve-3d' }}
-          animate={{
-            rotateX: rotation.rotateX,
-            rotateY: rotation.rotateY,
-          }}
-          transition={
-            phase === 'ROLLING'
-              ? { duration: 0.12, ease: 'linear' }
-              : { duration: 0.5, ease: 'easeOut' }
+    <div className="flex flex-col items-center gap-2">
+      <div
+        className={`
+          w-28 h-28 rounded-2xl border-2 flex items-center justify-center
+          text-center px-2 font-black text-sm leading-tight transition-colors duration-150
+          ${isResult
+            ? 'bg-gradient-to-br from-purple-600/40 to-pink-600/40 border-yellow-400/80 text-yellow-300 shadow-[0_0_24px_rgba(245,166,35,0.5)]'
+            : isRolling
+            ? 'bg-gradient-to-br from-purple-900/60 to-[#0d0820] border-purple-400/60 text-white'
+            : 'bg-white/5 border-white/10 text-white/40'
           }
+        `}
+      >
+        <span
+          key={flash ? 'a' : 'b'}
+          className={`
+            block break-words w-full text-center
+            ${isRolling ? 'animate-pulse' : ''}
+            ${isResult ? 'text-base' : ''}
+          `}
         >
-          {FACE_ROTATIONS.map((rot, i) => (
-            <div
-              key={i}
-              className={`
-                absolute inset-0 flex items-center justify-center rounded-xl border-2
-                text-sm font-bold text-center px-2 leading-tight
-                ${i === 4
-                  ? 'bg-gradient-to-br from-purple-600 to-purple-800 border-purple-400 text-white shadow-[0_0_20px_rgba(124,58,237,0.8)]'
-                  : 'bg-gradient-to-br from-[#1e1040] to-[#0d0820] border-white/20 text-white/80'
-                }
-              `}
-              style={{
-                backfaceVisibility: 'hidden',
-                transform: `rotateX(${rot.rotateX}deg) rotateY(${rot.rotateY}deg) translateZ(60px)`,
-              }}
-            >
-              {faceNames[i]}
-            </div>
-          ))}
-        </motion.div>
+          {displayName}
+        </span>
       </div>
 
-      {/* Winner label */}
-      {(phase === 'RESULT' || phase === 'FINISHED') && currentRollWinnerId && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
-        >
-          <span className="text-yellow-400 font-bold text-lg">
-            {players.find((p) => p.id === currentRollWinnerId)?.name}
-          </span>
-        </motion.div>
+      {isResult && (
+        <div className="text-[10px] text-yellow-400/70 uppercase tracking-widest font-semibold">
+          당첨!
+        </div>
       )}
     </div>
   )

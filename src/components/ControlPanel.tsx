@@ -47,12 +47,11 @@ export default function ControlPanel() {
         </label>
         <input
           type="number"
-          min={6}
-          max={30}
+          min={2}
           value={target}
           onChange={(e) => {
-            const v = Math.max(6, Math.min(30, Number(e.target.value)))
-            setTarget(v)
+            const v = Math.max(2, Number(e.target.value))
+            if (!isNaN(v)) setTarget(v)
           }}
           className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500/60 transition-all"
         />
