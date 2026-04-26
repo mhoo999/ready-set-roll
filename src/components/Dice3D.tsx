@@ -8,22 +8,33 @@ import { playRoll } from '@/lib/soundManager'
 type Props = {
   players: Player[]
   phase: GamePhase
+  pendingWinnerIdx: number | null
   currentRollWinnerId: string | null
   soundEnabled: boolean
   onAnimationComplete: () => void
 }
 
-const ITEM_H = 80   // px — must match h-20 (5rem = 80px)
-const FRAMES = 10   // names to scroll past
+const ITEM_H = 80   // px — must match h-20
+const FRAMES = 10   // names to scroll past before landing
 
-function buildReel(players: Player[]): string[] {
-  const start = Math.floor(Math.random() * players.length)
+// Calculate reel start so that position FRAMES lands exactly on winnerIdx
+function buildReel(players: Player[], winnerIdx: number): string[] {
+  const n = players.length
+  // (start + FRAMES) % n === winnerIdx  →  start = (winnerIdx - FRAMES % n + n) % n
+  const start = ((winnerIdx - (FRAMES % n)) % n + n) % n
   return Array.from({ length: FRAMES + 1 }, (_, i) =>
-    players[(start + i) % players.length].name
+    players[(start + i) % n].name
   )
 }
 
-export default function Dice3D({ players, phase, currentRollWinnerId, soundEnabled, onAnimationComplete }: Props) {
+export default function Dice3D({
+  players,
+  phase,
+  pendingWinnerIdx,
+  currentRollWinnerId,
+  soundEnabled,
+  onAnimationComplete,
+}: Props) {
   const [reel, setReel] = useState<{ key: number; names: string[] }>({ key: 0, names: ['?'] })
   const [winnerName, setWinnerName] = useState<string | null>(null)
   const calledRef = useRef(false)
@@ -33,13 +44,15 @@ export default function Dice3D({ players, phase, currentRollWinnerId, soundEnabl
       calledRef.current = false
       return
     }
-    if (players.length === 0) return
+    if (players.length === 0 || pendingWinnerIdx === null) return
 
     calledRef.current = false
     setWinnerName(null)
     if (soundEnabled) playRoll()
 
-    setReel((prev) => ({ key: prev.key + 1, names: buildReel(players) }))
+    // Build reel with winner guaranteed at the final position
+    const names = buildReel(players, pendingWinnerIdx)
+    setReel((prev) => ({ key: prev.key + 1, names }))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase])
 
@@ -71,7 +84,7 @@ export default function Dice3D({ players, phase, currentRollWinnerId, soundEnabl
         {/* Bottom gradient — masks names exiting below */}
         <div className="absolute bottom-0 inset-x-0 h-7 bg-gradient-to-t from-[#0d0820] to-transparent z-10 pointer-events-none" />
 
-        {/* Tape: single continuous scroll, remounts each roll via key */}
+        {/* Tape: remounts each roll via key, ends on winner */}
         <motion.div
           key={reel.key}
           className="flex flex-col"

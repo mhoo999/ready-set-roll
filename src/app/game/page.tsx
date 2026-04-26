@@ -21,6 +21,7 @@ export default function GamePage() {
   const players = useGameStore((s) => s.players)
   const target = useGameStore((s) => s.target)
   const currentRollWinnerId = useGameStore((s) => s.currentRollWinnerId)
+  const pendingWinnerIdx = useGameStore((s) => s.pendingWinnerIdx)
   const winnerId = useGameStore((s) => s.winnerId)
   const history = useGameStore((s) => s.history)
   const delayMs = useGameStore((s) => s.delayMs)
@@ -100,6 +101,7 @@ export default function GamePage() {
             <Dice3D
               players={players}
               phase={phase}
+              pendingWinnerIdx={pendingWinnerIdx}
               currentRollWinnerId={currentRollWinnerId}
               soundEnabled={soundEnabled}
               onAnimationComplete={resolveRoll}

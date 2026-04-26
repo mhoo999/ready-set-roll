@@ -12,6 +12,7 @@ type GameState = {
   lastWinnerId: string | null
   winnerId: string | null
   currentRollWinnerId: string | null
+  pendingWinnerIdx: number | null
   history: string[]
   rollCount: number
 }
@@ -39,6 +40,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => ({
   lastWinnerId: null,
   winnerId: null,
   currentRollWinnerId: null,
+  pendingWinnerIdx: null,
   history: [],
   rollCount: 0,
 
@@ -61,14 +63,21 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => ({
       lastWinnerId: null,
       winnerId: null,
       currentRollWinnerId: null,
+      pendingWinnerIdx: null,
     })
   },
 
-  beginRoll: () => set({ phase: 'ROLLING', currentRollWinnerId: null }),
+  // Pick winner here so Dice3D can align the reel before animation starts
+  beginRoll: () => {
+    const { players } = get()
+    const pendingWinnerIdx = pickWinnerIndex(players.length)
+    set({ phase: 'ROLLING', currentRollWinnerId: null, pendingWinnerIdx })
+  },
 
+  // Use the pre-picked winner — no second random draw
   resolveRoll: () => {
-    const { players, lastWinnerId, target, history, rollCount } = get()
-    const idx = pickWinnerIndex(players.length)
+    const { players, lastWinnerId, target, history, rollCount, pendingWinnerIdx } = get()
+    const idx = pendingWinnerIdx ?? pickWinnerIndex(players.length)
     const selected = players[idx]
     const isCombo = selected.id === lastWinnerId
     const move = isCombo ? 2 : 1
@@ -90,6 +99,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => ({
       winnerId: won ? selected.id : null,
       history: [...history, logEntry],
       rollCount: rollCount + 1,
+      pendingWinnerIdx: null,
     })
   },
 
@@ -106,6 +116,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => ({
       lastWinnerId: null,
       winnerId: null,
       currentRollWinnerId: null,
+      pendingWinnerIdx: null,
       history: [],
       rollCount: 0,
     }),
