@@ -1,17 +1,19 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import confetti from 'canvas-confetti'
 import { useGameStore } from '@/store/useGameStore'
 import { playWin } from '@/lib/soundManager'
 
 export default function ResultOverlay() {
+  const router = useRouter()
   const phase = useGameStore((s) => s.phase)
   const winnerId = useGameStore((s) => s.winnerId)
   const players = useGameStore((s) => s.players)
   const soundEnabled = useGameStore((s) => s.soundEnabled)
-  const restartGame = useGameStore((s) => s.restartGame)
+  const resetGame = useGameStore((s) => s.resetGame)
 
   const winner = players.find((p) => p.id === winnerId)
 
@@ -45,7 +47,7 @@ export default function ResultOverlay() {
             <h1 className="text-4xl font-black text-yellow-300 mb-2 break-words">{winner.name}</h1>
             <p className="text-white/40 text-sm mb-8">결승선 도달!</p>
             <button
-              onClick={restartGame}
+              onClick={() => { resetGame(); router.push('/') }}
               className="bg-purple-600 hover:bg-purple-500 active:scale-95 text-white font-bold px-8 py-3 rounded-xl transition-all duration-150 text-base"
             >
               다시 하기

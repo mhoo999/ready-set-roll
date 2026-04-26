@@ -37,6 +37,21 @@ export default function Dice3D({
   const [revealed, setRevealed] = useState(false)
   const calledRef = useRef(false)
 
+  const viewportRef = useRef<HTMLDivElement>(null)
+  const [viewH, setViewH] = useState(ITEM_H)
+
+  useEffect(() => {
+    const el = viewportRef.current
+    if (!el) return
+    const obs = new ResizeObserver(([entry]) => setViewH(entry.contentRect.height))
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
+  // Center the target item in the viewport regardless of height
+  const initialY = (viewH - ITEM_H) / 2
+  const finalY = initialY - FRAMES * ITEM_H
+
   useEffect(() => {
     if (phase !== 'ROLLING') {
       calledRef.current = false
@@ -63,10 +78,11 @@ export default function Dice3D({
   const isRolling = phase === 'ROLLING'
 
   return (
-    <div className="flex flex-col gap-1 w-full">
+    <div className="flex flex-col gap-1 w-full flex-1 min-h-0">
       <div
+        ref={viewportRef}
         className={`
-          relative w-full overflow-hidden rounded-xl border-2 transition-all duration-300 bg-[#0d0820]
+          flex-1 min-h-0 relative w-full overflow-hidden rounded-xl border-2 transition-all duration-300 bg-[#0d0820]
           ${isResult
             ? 'border-yellow-400/70 shadow-[0_0_20px_rgba(245,166,35,0.4)]'
             : isRolling
@@ -74,7 +90,6 @@ export default function Dice3D({
             : 'border-white/10'
           }
         `}
-        style={{ height: ITEM_H }}
       >
         <div className="absolute top-0 inset-x-0 h-8 bg-gradient-to-b from-[#0d0820] to-transparent z-10 pointer-events-none" />
         <div className="absolute bottom-0 inset-x-0 h-8 bg-gradient-to-t from-[#0d0820] to-transparent z-10 pointer-events-none" />
@@ -83,8 +98,8 @@ export default function Dice3D({
           key={reel.key}
           className="flex flex-col"
           style={{ willChange: 'transform' }}
-          initial={{ y: 0 }}
-          animate={{ y: -(FRAMES * ITEM_H) }}
+          initial={{ y: initialY }}
+          animate={{ y: finalY }}
           transition={{ duration: 2.2, ease: [0.05, 0.85, 0.25, 1.0] }}
           onAnimationComplete={() => {
             if (!calledRef.current) {
@@ -117,7 +132,7 @@ export default function Dice3D({
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-center text-[10px] text-yellow-400/80 uppercase tracking-widest font-semibold"
+          className="flex-none text-center text-[10px] text-yellow-400/80 uppercase tracking-widest font-semibold"
         >
           당첨!
         </motion.div>
