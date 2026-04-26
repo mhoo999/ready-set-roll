@@ -13,7 +13,6 @@ type Props = {
   target: number
   leaderPosition: number
   runnerUpPosition: number
-  lastPosition: number
   tiedCount: number
 }
 
@@ -64,6 +63,33 @@ const ACTIVE_SAYINGS = [
   '무야호~',
 ]
 
+// 같은 칸에서 앞서 나갈 때 — 상대 이름 포함
+const JUST_LEFT_TIE_WITH_NAME: Array<(n: string) => string> = [
+  (n) => `${n} 잘 있어^^`,
+  (n) => `${n} 안녕~`,
+  (n) => `${n}, 앞에서 봐요~`,
+  (n) => `${n}, 먼저 갈게!`,
+]
+
+// 같은 칸에서 앞서 나갈 때 — 이름 없는 버전
+const JUST_LEFT_TIE_GENERIC = [
+  '먼저 갈게~',
+  '나중에 봐!',
+  '앞에서 기다릴게~',
+  '바이바이~',
+  '그럼 이만~',
+]
+
+// 자기 이름 포함 대사
+const SELF_NAME_SAYINGS: Array<(n: string) => string> = [
+  (n) => `나, ${n}이야!`,
+  (n) => `${n} 간다!`,
+  (n) => `내 이름 기억해, ${n}!`,
+  (n) => `${n}의 시간이 왔다!`,
+  (n) => `이게 바로 ${n}이야!`,
+  (n) => `${n} 파이팅!`,
+]
+
 const NEARFINISH_SAYINGS = [
   '거의 다 왔어!',
   '막판 스퍼트!',
@@ -79,6 +105,8 @@ const IDLE_LEADER_BIG = [
   '쉬엄쉬엄 갈까?',
   '여유롭다 여유로워',
   '이 정도면 안전권!',
+  '이사님, 저를 부르지 마세요...',
+  '칼퇴하자~',
 ]
 
 const IDLE_LEADER_CLOSE = [
@@ -96,19 +124,6 @@ const IDLE_TIED = [
   '서로 노려보자',
   '진검승부!',
   '옆 좀 보지 마!',
-]
-
-const IDLE_CHASER_BEHIND = [
-  '저 멀리 보이긴 한다...',
-  '아직 안 늦었어!',
-  '역전 가자!',
-  '포기는 없다',
-  '인생은 한 방',
-  '두고 봐라',
-  '끝날 때까진 끝난 게 아니야!',
-  '포기는 배추 셀 때나 쓰는 단어!',
-  '불굴의 의지!',
-  '지금부터가 진짜야!',
 ]
 
 const IDLE_CHASER_CLOSE = [
@@ -129,8 +144,17 @@ const IDLE_LAST = [
   '이건 아니지~',
   '이게 실화냐?',
   '억울하면 이겨!',
-  '나는 돌아온다!',           // Terminator
+  '나는 돌아온다!',
   '오늘 이 결과는 인정 못 해!',
+  '저 멀리 보이긴 한다...',
+  '아직 안 늦었어!',
+  '역전 가자!',
+  '포기는 없다',
+  '두고 봐라',
+  '끝날 때까진 끝난 게 아니야!',
+  '포기는 배추 셀 때나 쓰는 단어!',
+  '불굴의 의지!',
+  '지금부터가 진짜야!',
 ]
 
 
@@ -169,15 +193,14 @@ export default function HorseToken({
   target,
   leaderPosition,
   runnerUpPosition,
-  lastPosition,
   tiedCount,
 }: Props) {
   // 파생 상태
   const gapToLeader = leaderPosition - position
   const isSoleLeader = position === leaderPosition && position > runnerUpPosition
   const leadMargin = isSoleLeader ? position - runnerUpPosition : 0
-  const isLast = position === lastPosition && lastPosition < leaderPosition
-  const isTied = tiedCount > 0
+  const isTiedAtTop = position === leaderPosition && tiedCount > 0   // 1등 자리 동률
+  const isBehind = gapToLeader >= Math.max(3, Math.ceil(target * 0.3)) // 격차 큰 추격자→꼴등 처리
 
   const [bubble, setBubble] = useState<string | null>(null)
   const clearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -188,10 +211,14 @@ export default function HorseToken({
   const positionRef = useRef(position)
   const isSoleLeaderRef = useRef(isSoleLeader)
   const leadMarginRef = useRef(leadMargin)
-  const isLastRef = useRef(isLast)
-  const isTiedRef = useRef(isTied)
+  const isTiedAtTopRef = useRef(isTiedAtTop)
+  const isBehindRef = useRef(isBehind)
   const gapToLeaderRef = useRef(gapToLeader)
+  const leaderPositionRef = useRef(leaderPosition)
   const prevGapRef = useRef(gapToLeader)
+  const prevTiedCountRef = useRef(tiedCount)
+  const prevLeaderNameRef = useRef(leaderName)
+  const nameRef = useRef(name)
 
   const show = (text: string, duration = 2500) => {
     if (clearTimerRef.current) clearTimeout(clearTimerRef.current)
@@ -199,13 +226,22 @@ export default function HorseToken({
     clearTimerRef.current = setTimeout(() => setBubble(null), duration)
   }
 
-  // ===== 이동 시 — prevGap 갱신보다 먼저 선언해야 함 =====
+  // ===== 이동 시 — prevGap/prevTiedCount 갱신보다 먼저 선언해야 함 =====
   useEffect(() => {
     if (!isActive || isWinner) return
     const justCaughtUp = prevGapRef.current > 0 && gapToLeader === 0 && !isSoleLeader
+    const justLeftTie = prevTiedCountRef.current > 0
+    const wasAtLeaderPos = prevGapRef.current === 0
 
     if (justCaughtUp) {
       show(resolve(pick(JUST_CAUGHT_UP), leaderName), 2200)
+    } else if (justLeftTie) {
+      // 같은 칸에 있다가 앞서 나갈 때
+      if (wasAtLeaderPos && prevLeaderNameRef.current !== name) {
+        show(pick(JUST_LEFT_TIE_WITH_NAME)(prevLeaderNameRef.current), 2200)
+      } else {
+        show(pick(JUST_LEFT_TIE_GENERIC), 2200)
+      }
     } else if (isCombo) {
       if (isSoleLeader) {
         const pool = leadMargin >= 4 ? COMBO_LEADER_BIG_GAP : COMBO_LEADER_CLOSE
@@ -214,7 +250,12 @@ export default function HorseToken({
         show(resolve(pick(COMBO_CHASER_CLOSING), leaderName), 2000)
       }
     } else if (Math.random() < 0.4) {
-      show(pick(ACTIVE_SAYINGS), 2000)
+      // 30% 확률로 자기 이름 대사
+      if (Math.random() < 0.3) {
+        show(pick(SELF_NAME_SAYINGS)(name), 2000)
+      } else {
+        show(pick(ACTIVE_SAYINGS), 2000)
+      }
     }
   }, [isActive]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -229,10 +270,13 @@ export default function HorseToken({
   useEffect(() => { positionRef.current = position })
   useEffect(() => { isSoleLeaderRef.current = isSoleLeader })
   useEffect(() => { leadMarginRef.current = leadMargin })
-  useEffect(() => { isLastRef.current = isLast })
-  useEffect(() => { isTiedRef.current = isTied })
+  useEffect(() => { isTiedAtTopRef.current = isTiedAtTop })
+  useEffect(() => { isBehindRef.current = isBehind })
   useEffect(() => { gapToLeaderRef.current = gapToLeader })
+  useEffect(() => { leaderPositionRef.current = leaderPosition })
   useEffect(() => { prevGapRef.current = gapToLeader })
+  useEffect(() => { prevTiedCountRef.current = tiedCount })
+  useEffect(() => { prevLeaderNameRef.current = leaderName })
 
   // 유휴 타이머 (12~20초)
   useEffect(() => {
@@ -241,18 +285,28 @@ export default function HorseToken({
       const delay = 12000 + Math.random() * 8000
       timeout = setTimeout(() => {
         if (!isActiveRef.current && !isWinnerRef.current) {
+          // 10% 확률로 자기 이름 대사 (상황 무관)
+          if (Math.random() < 0.1) {
+            show(pick(SELF_NAME_SAYINGS)(nameRef.current), 2500)
+            schedule()
+            return
+          }
+          const isEarlyRace = leaderPositionRef.current < Math.max(3, Math.floor(target * 0.25))
           let pool: string[]
-          if (positionRef.current >= target * 0.6 && !isLastRef.current) {
+          if (positionRef.current >= target * 0.6 && !isBehindRef.current) {
             pool = NEARFINISH_SAYINGS
-          } else if (Math.random() < 0.6) {
-            if (isTiedRef.current) {
+          } else if (!isEarlyRace && Math.random() < 0.6) {
+            if (isTiedAtTopRef.current) {
               pool = IDLE_TIED
             } else if (isSoleLeaderRef.current) {
               pool = leadMarginRef.current >= 4 ? IDLE_LEADER_BIG : IDLE_LEADER_CLOSE
-            } else if (isLastRef.current) {
+            } else if (isBehindRef.current) {
+              if (Math.random() < 0.04) {
+                show('개발자한테 커피라도 사야하나...', 3000)
+                schedule()
+                return
+              }
               pool = IDLE_LAST
-            } else if (gapToLeaderRef.current >= 4) {
-              pool = IDLE_CHASER_BEHIND
             } else if (gapToLeaderRef.current <= 2) {
               pool = IDLE_CHASER_CLOSE
             } else {

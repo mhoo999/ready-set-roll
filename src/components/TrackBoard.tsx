@@ -17,7 +17,6 @@ export default function TrackBoard({ players, target, currentRollWinnerId, winne
   const leaderPosition = positions.length ? Math.max(...positions) : 0
   const nonLeaderPositions = positions.filter(p => p !== leaderPosition)
   const runnerUpPosition = nonLeaderPositions.length ? Math.max(...nonLeaderPositions) : leaderPosition
-  const lastPosition = positions.length ? Math.min(...positions) : 0
   const leader = players.find(p => p.position === leaderPosition)
 
   return (
@@ -96,7 +95,6 @@ export default function TrackBoard({ players, target, currentRollWinnerId, winne
                             target={target}
                             leaderPosition={leaderPosition}
                             runnerUpPosition={runnerUpPosition}
-                            lastPosition={lastPosition}
                             tiedCount={tiedCount}
                           />
                         </motion.div>
