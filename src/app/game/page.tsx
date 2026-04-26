@@ -77,7 +77,7 @@ export default function GamePage() {
       </div>
 
       {/* Bottom strip: Slot(7) | Log(3) — fixed height so track always fills the rest */}
-      <div className="flex-none flex border-t border-white/5 h-44">
+      <div className="flex-none flex border-t border-white/5 h-[90px]">
 
         {/* Slot area — 70% */}
         <div className="flex flex-col gap-2 px-4 py-3" style={{ width: '70%' }}>

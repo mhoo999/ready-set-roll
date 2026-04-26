@@ -35,9 +35,22 @@ export default function InputPanel() {
             {count}명
           </span>
         </span>
-        {count < 2 && (
-          <span className="text-red-400">최소 2명 필요</span>
-        )}
+        <div className="flex items-center gap-2">
+          {count < 2 && <span className="text-red-400">최소 2명 필요</span>}
+          {count >= 2 && (
+            <button
+              onClick={() => {
+                const shuffled = [...playerNames].sort(() => Math.random() - 0.5)
+                const newRaw = shuffled.join(', ')
+                setRaw(newRaw)
+                setPlayerNames(newRaw)
+              }}
+              className="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-white/40 hover:text-white/70 border border-white/10 transition-all"
+            >
+              🔀 섞기
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )
