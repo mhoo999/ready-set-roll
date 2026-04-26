@@ -76,8 +76,8 @@ export default function GamePage() {
         />
       </div>
 
-      {/* Bottom strip: Slot(7) | Log(3) — height = total - track */}
-      <div className="flex-none flex border-t border-white/5">
+      {/* Bottom strip: Slot(7) | Log(3) — fixed height so track always fills the rest */}
+      <div className="flex-none flex border-t border-white/5 h-44">
 
         {/* Slot area — 70% */}
         <div className="flex flex-col gap-2 px-4 py-3" style={{ width: '70%' }}>
@@ -93,7 +93,7 @@ export default function GamePage() {
         </div>
 
         {/* Log area — 30% */}
-        <div className="min-h-0" style={{ width: '30%' }}>
+        <div className="h-full overflow-hidden" style={{ width: '30%' }}>
           <LogPanel history={history} />
         </div>
 
