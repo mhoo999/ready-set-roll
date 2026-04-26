@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import BgmPlayer from '@/components/BgmPlayer'
 
 export const metadata: Metadata = {
   title: 'Ready Set Roll',
@@ -9,7 +10,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko" className="h-full antialiased">
-      <body className="min-h-full flex flex-col bg-[#0a0814]">{children}</body>
+      <body className="min-h-full flex flex-col bg-[#0a0814]">
+        <BgmPlayer />
+        {children}
+      </body>
     </html>
   )
 }

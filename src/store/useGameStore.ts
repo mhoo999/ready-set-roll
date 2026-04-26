@@ -6,6 +6,7 @@ type GameState = {
   delayMs: number
   target: number
   soundEnabled: boolean
+  bgmEnabled: boolean
   autoStart: boolean
   players: Player[]
   phase: GamePhase
@@ -21,6 +22,7 @@ type GameActions = {
   setPlayerNames: (raw: string) => void
   setTarget: (n: number) => void
   setSoundEnabled: (v: boolean) => void
+  setBgmEnabled: (v: boolean) => void
   setAutoStart: (v: boolean) => void
   startGame: () => void
   restartGame: () => void
@@ -35,6 +37,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => ({
   delayMs: 500,
   target: 12,
   soundEnabled: true,
+  bgmEnabled: false,
   autoStart: true,
   players: [],
   phase: 'IDLE',
@@ -51,6 +54,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => ({
   },
   setTarget: (n) => set({ target: n }),
   setSoundEnabled: (v) => set({ soundEnabled: v }),
+  setBgmEnabled: (v) => set({ bgmEnabled: v }),
   setAutoStart: (v) => set({ autoStart: v }),
 
   startGame: () => {

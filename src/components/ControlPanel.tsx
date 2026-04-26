@@ -5,10 +5,10 @@ import { useGameStore } from '@/store/useGameStore'
 export default function ControlPanel() {
   const target = useGameStore((s) => s.target)
   const soundEnabled = useGameStore((s) => s.soundEnabled)
-  const autoStart = useGameStore((s) => s.autoStart)
+  const bgmEnabled = useGameStore((s) => s.bgmEnabled)
   const setTarget = useGameStore((s) => s.setTarget)
   const setSoundEnabled = useGameStore((s) => s.setSoundEnabled)
-  const setAutoStart = useGameStore((s) => s.setAutoStart)
+  const setBgmEnabled = useGameStore((s) => s.setBgmEnabled)
 
   return (
     <div className="flex flex-col gap-4">
@@ -31,8 +31,8 @@ export default function ControlPanel() {
 
       {/* Toggles */}
       <div className="flex gap-3">
-        <Toggle label="사운드" value={soundEnabled} onChange={setSoundEnabled} />
-        <Toggle label="자동진행" value={autoStart} onChange={setAutoStart} />
+        <Toggle label="사운드 효과" value={soundEnabled} onChange={setSoundEnabled} />
+        <Toggle label="배경음악" value={bgmEnabled} onChange={setBgmEnabled} />
       </div>
     </div>
   )
