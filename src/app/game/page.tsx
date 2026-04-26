@@ -76,11 +76,11 @@ export default function GamePage() {
         />
       </div>
 
-      {/* Bottom strip: Slot(7) | Log(3) */}
-      <div className="flex-none flex h-44 border-t border-white/5">
+      {/* Bottom strip: Slot(7) | Log(3) — height = total - track */}
+      <div className="flex-none flex border-t border-white/5">
 
         {/* Slot area — 70% */}
-        <div className="flex flex-col justify-center gap-2 px-4 py-3" style={{ width: '70%' }}>
+        <div className="flex flex-col gap-2 px-4 py-3" style={{ width: '70%' }}>
           <Dice3D
             players={players}
             phase={phase}
