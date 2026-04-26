@@ -23,6 +23,7 @@ type GameActions = {
   setSoundEnabled: (v: boolean) => void
   setAutoStart: (v: boolean) => void
   startGame: () => void
+  restartGame: () => void
   resetGame: () => void
   beginRoll: () => void
   resolveRoll: () => void
@@ -53,6 +54,21 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => ({
   setAutoStart: (v) => set({ autoStart: v }),
 
   startGame: () => {
+    const { playerNames } = get()
+    const players = parsePlayers(playerNames)
+    set({
+      players,
+      phase: 'START',
+      history: [],
+      rollCount: 0,
+      lastWinnerId: null,
+      winnerId: null,
+      currentRollWinnerId: null,
+      pendingWinnerIdx: null,
+    })
+  },
+
+  restartGame: () => {
     const { playerNames } = get()
     const players = parsePlayers(playerNames)
     set({
