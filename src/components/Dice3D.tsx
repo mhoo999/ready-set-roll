@@ -16,11 +16,12 @@ type Props = {
 
 const ITEM_H = 96
 const FRAMES = 10
+const TAIL = 3  // items shown below the winner so the reel doesn't look empty
 
 function buildReel(players: Player[], winnerIdx: number): string[] {
   const n = players.length
   const start = ((winnerIdx - (FRAMES % n)) % n + n) % n
-  return Array.from({ length: FRAMES + 1 }, (_, i) =>
+  return Array.from({ length: FRAMES + 1 + TAIL }, (_, i) =>
     players[(start + i) % n].name
   )
 }
