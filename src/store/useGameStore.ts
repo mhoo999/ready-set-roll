@@ -31,7 +31,7 @@ type GameActions = {
 
 export const useGameStore = create<GameState & GameActions>()((set, get) => ({
   playerNames: [],
-  delayMs: 1000,
+  delayMs: 500,
   target: 12,
   soundEnabled: true,
   autoStart: true,

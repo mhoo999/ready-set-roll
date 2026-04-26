@@ -14,11 +14,11 @@ export default function LogPanel({ history }: Props) {
   }, [history])
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/5 overflow-hidden">
-      <div className="px-3 py-2 border-b border-white/10 text-xs font-semibold text-white/50 uppercase tracking-wider">
+    <div className="flex flex-col h-full border-l border-white/10 bg-white/5 overflow-hidden">
+      <div className="flex-none px-3 py-2 border-b border-white/10 text-xs font-semibold text-white/50 uppercase tracking-wider">
         기록 ({history.length})
       </div>
-      <div className="overflow-y-auto max-h-40 p-2 space-y-0.5">
+      <div className="flex-1 overflow-y-auto p-2 space-y-0.5 min-h-0">
         {history.length === 0 && (
           <p className="text-white/20 text-xs text-center py-4">기록 없음</p>
         )}

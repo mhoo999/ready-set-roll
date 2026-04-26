@@ -14,7 +14,7 @@ type Props = {
   onAnimationComplete: () => void
 }
 
-const ITEM_H = 80
+const ITEM_H = 96
 const FRAMES = 10
 
 function buildReel(players: Player[], winnerIdx: number): string[] {
@@ -63,10 +63,10 @@ export default function Dice3D({
   const isRolling = phase === 'ROLLING'
 
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-col gap-1 w-full">
       <div
         className={`
-          relative w-32 h-20 overflow-hidden rounded-xl border-2 transition-all duration-300 bg-[#0d0820]
+          relative w-full overflow-hidden rounded-xl border-2 transition-all duration-300 bg-[#0d0820]
           ${isResult
             ? 'border-yellow-400/70 shadow-[0_0_20px_rgba(245,166,35,0.4)]'
             : isRolling
@@ -74,9 +74,10 @@ export default function Dice3D({
             : 'border-white/10'
           }
         `}
+        style={{ height: ITEM_H }}
       >
-        <div className="absolute top-0 inset-x-0 h-7 bg-gradient-to-b from-[#0d0820] to-transparent z-10 pointer-events-none" />
-        <div className="absolute bottom-0 inset-x-0 h-7 bg-gradient-to-t from-[#0d0820] to-transparent z-10 pointer-events-none" />
+        <div className="absolute top-0 inset-x-0 h-8 bg-gradient-to-b from-[#0d0820] to-transparent z-10 pointer-events-none" />
+        <div className="absolute bottom-0 inset-x-0 h-8 bg-gradient-to-t from-[#0d0820] to-transparent z-10 pointer-events-none" />
 
         <motion.div
           key={reel.key}
@@ -95,12 +96,12 @@ export default function Dice3D({
           {reel.names.map((name, i) => (
             <div
               key={i}
-              className="flex items-center justify-center px-2 flex-shrink-0"
+              className="flex items-center justify-center px-4 flex-shrink-0"
               style={{ height: ITEM_H }}
             >
               <span
                 className={`
-                  font-black text-sm text-center break-words leading-tight select-none
+                  font-black text-3xl text-center break-words leading-tight select-none
                   transition-colors duration-200
                   ${revealed && i === FRAMES ? 'text-yellow-300' : 'text-white'}
                 `}
@@ -116,7 +117,7 @@ export default function Dice3D({
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-[10px] text-yellow-400/80 uppercase tracking-widest font-semibold"
+          className="text-center text-[10px] text-yellow-400/80 uppercase tracking-widest font-semibold"
         >
           당첨!
         </motion.div>
