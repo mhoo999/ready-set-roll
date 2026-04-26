@@ -14,7 +14,7 @@ type Props = {
 export default function TrackBoard({ players, target, currentRollWinnerId, winnerId }: Props) {
   return (
     <div
-      className="w-full overflow-x-auto rounded-2xl border border-white/10 bg-gradient-to-b from-[#1a1040] to-[#0d0820] p-4"
+      className="w-full rounded-2xl border border-white/10 bg-gradient-to-b from-[#1a1040] to-[#0d0820] p-4"
       style={{ perspective: '800px' }}
     >
       <div style={{ transform: 'rotateX(6deg)', transformStyle: 'preserve-3d' }}>
@@ -23,7 +23,7 @@ export default function TrackBoard({ players, target, currentRollWinnerId, winne
           {Array.from({ length: target + 1 }, (_, i) => (
             <div
               key={i}
-              className={`flex-shrink-0 w-12 text-center text-xs font-mono
+              className={`flex-1 min-w-0 text-center text-xs font-mono
                 ${i === target ? 'text-yellow-400 font-bold' : 'text-white/30'}
               `}
             >
@@ -65,7 +65,7 @@ export default function TrackBoard({ players, target, currentRollWinnerId, winne
                     <div
                       key={i}
                       className={`
-                        flex-shrink-0 w-12 h-10 flex items-center justify-center
+                        flex-1 min-w-0 h-10 flex items-center justify-center
                         border-l border-white/5 relative
                         ${i === target ? 'bg-yellow-400/5' : ''}
                       `}
