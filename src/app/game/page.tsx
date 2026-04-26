@@ -25,7 +25,9 @@ export default function GamePage() {
   const history = useGameStore((s) => s.history)
   const delayMs = useGameStore((s) => s.delayMs)
   const soundEnabled = useGameStore((s) => s.soundEnabled)
+  const bgmEnabled = useGameStore((s) => s.bgmEnabled)
   const resolveRoll = useGameStore((s) => s.resolveRoll)
+  const setBgmEnabled = useGameStore((s) => s.setBgmEnabled)
   const resetGame = useGameStore((s) => s.resetGame)
 
   useEffect(() => {
@@ -75,13 +77,23 @@ export default function GamePage() {
 
         {/* Log area — 20% */}
         <div className="h-full flex flex-col overflow-hidden" style={{ width: '20%' }}>
-          <button
-            onClick={handleReset}
-            className="flex-none w-full text-xs font-semibold text-white/40 hover:text-white/70
-                       hover:bg-white/5 border-b border-white/10 py-2 px-3 transition-colors text-left"
-          >
-            ← 다시하기
-          </button>
+          <div className="flex-none w-full border-b border-white/10 flex items-center">
+            <button
+              onClick={handleReset}
+              className="flex-1 text-xs font-semibold text-white/40 hover:text-white/70
+                         hover:bg-white/5 py-2 px-3 transition-colors text-left"
+            >
+              ← 다시하기
+            </button>
+            <button
+              onClick={() => setBgmEnabled(!bgmEnabled)}
+              className="flex-none text-xs font-semibold text-white/40 hover:text-white/70
+                         hover:bg-white/5 py-2 px-3 transition-colors border-l border-white/10"
+              title="배경음악 켜기/끄기"
+            >
+              {bgmEnabled ? '🔊 BGM' : '🔇 BGM'}
+            </button>
+          </div>
           <div className="flex-1 min-h-0 overflow-hidden">
             <LogPanel history={history} />
           </div>

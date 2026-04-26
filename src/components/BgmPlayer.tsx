@@ -11,7 +11,7 @@ export default function BgmPlayer() {
     const audio = audioRef.current
     if (!audio) return
 
-    audio.volume = 0.5
+    audio.volume = 0.25
 
     if (bgmEnabled) {
       const playPromise = audio.play()
