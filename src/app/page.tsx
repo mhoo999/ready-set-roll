@@ -28,7 +28,7 @@ export default function SetupPage() {
           <span className="text-yellow-400">SET</span>
           <span className="text-pink-400">ROLL</span>
         </h1>
-        <p className="text-white/30 text-sm mt-2 tracking-widest uppercase">이름 기반 RNG 레이스</p>
+        <p className="text-white/30 text-sm mt-2 tracking-widest uppercase">추첨 시뮬레이터</p>
       </div>
 
       {/* Card */}
@@ -53,9 +53,30 @@ export default function SetupPage() {
         </button>
       </div>
 
-      <p className="mt-6 text-white/15 text-xs text-center">
-        Vercel 배포 준비 완료 · 방송/스트리밍 최적화
-      </p>
+      {/* Footer */}
+      <footer className="mt-12 w-full max-w-lg text-center">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-6">
+          <a
+            href="https://www.thinghoon.com/"
+            className="w-full sm:w-auto px-6 py-3 border border-white/20 bg-white/5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg text-sm font-medium transition-all active:translate-y-[1px]"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            다른 서비스 이용해보기
+          </a>
+          <a
+            href="https://buymeacoffee.com/hoonsdev"
+            className="w-full sm:w-auto px-6 py-3 border border-white/20 bg-white/5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg text-sm font-medium transition-all active:translate-y-[1px]"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            개발자 커피 한잔 사주기
+          </a>
+        </div>
+        <div className="text-white/40 text-sm">
+          mhoo999@naver.com
+        </div>
+      </footer>
     </main>
   )
 }
