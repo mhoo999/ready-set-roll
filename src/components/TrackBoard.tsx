@@ -9,9 +9,17 @@ type Props = {
   target: number
   currentRollWinnerId: string | null
   winnerId: string | null
+  lastWinnerId: string | null
 }
 
-export default function TrackBoard({ players, target, currentRollWinnerId, winnerId }: Props) {
+export default function TrackBoard({ players, target, currentRollWinnerId, winnerId, lastWinnerId }: Props) {
+  const positions = players.map(p => p.position)
+  const leaderPosition = positions.length ? Math.max(...positions) : 0
+  const nonLeaderPositions = positions.filter(p => p !== leaderPosition)
+  const runnerUpPosition = nonLeaderPositions.length ? Math.max(...nonLeaderPositions) : leaderPosition
+  const lastPosition = positions.length ? Math.min(...positions) : 0
+  const leader = players.find(p => p.position === leaderPosition)
+
   return (
     <div
       className="w-full h-full rounded-2xl border border-white/10 bg-gradient-to-b from-[#1a1040] to-[#0d0820] p-4 flex flex-col justify-center"
@@ -37,12 +45,14 @@ export default function TrackBoard({ players, target, currentRollWinnerId, winne
           {players.map((player, laneIdx) => {
             const isActive = player.id === currentRollWinnerId
             const isWinner = player.id === winnerId
+            const isCombo = isActive && player.id === lastWinnerId
+            const tiedCount = players.filter(o => o.id !== player.id && o.position === player.position).length
 
             return (
               <div
                 key={player.id}
                 className={`
-                  flex items-center rounded-lg flex-1 min-h-0 overflow-hidden px-2
+                  flex items-center rounded-lg flex-1 min-h-0 px-2
                   ${isWinner ? 'bg-yellow-400/10 border border-yellow-400/40' : isActive ? 'bg-purple-500/10 border border-purple-500/30' : 'bg-white/5 border border-white/5'}
                   transition-colors duration-300
                 `}
@@ -80,6 +90,14 @@ export default function TrackBoard({ players, target, currentRollWinnerId, winne
                             name={player.name}
                             isActive={isActive}
                             isWinner={isWinner}
+                            isCombo={isCombo}
+                            leaderName={leader?.name ?? ''}
+                            position={player.position}
+                            target={target}
+                            leaderPosition={leaderPosition}
+                            runnerUpPosition={runnerUpPosition}
+                            lastPosition={lastPosition}
+                            tiedCount={tiedCount}
                           />
                         </motion.div>
                       )}

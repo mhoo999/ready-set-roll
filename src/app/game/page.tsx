@@ -22,6 +22,7 @@ export default function GamePage() {
   const currentRollWinnerId = useGameStore((s) => s.currentRollWinnerId)
   const pendingWinnerIdx = useGameStore((s) => s.pendingWinnerIdx)
   const winnerId = useGameStore((s) => s.winnerId)
+  const lastWinnerId = useGameStore((s) => s.lastWinnerId)
   const history = useGameStore((s) => s.history)
   const delayMs = useGameStore((s) => s.delayMs)
   const soundEnabled = useGameStore((s) => s.soundEnabled)
@@ -51,6 +52,7 @@ export default function GamePage() {
           target={target}
           currentRollWinnerId={currentRollWinnerId}
           winnerId={winnerId}
+          lastWinnerId={lastWinnerId}
         />
       </div>
 
