@@ -29,6 +29,7 @@ export default function SetupPage() {
           <span className="text-pink-400">ROLL</span>
         </h1>
         <p className="text-white/30 text-sm mt-2 tracking-widest uppercase">추첨 시뮬레이터</p>
+        <h2 className="sr-only">무료 이벤트 추첨, 웹 추첨기 사이트, 추첨 프로그램, 재미있는 추첨 핀볼</h2>
       </div>
 
       {/* Card */}
