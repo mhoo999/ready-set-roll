@@ -16,7 +16,9 @@
       "WebFetch(domain:github.com)",
       "Bash(npm install *)",
       "Bash(qmd --version)",
-      "Bash(qmd --help)"
+      "Bash(qmd --help)",
+      "Bash(git commit *)",
+      "Bash(git pull *)"
     ]
   }
 }
