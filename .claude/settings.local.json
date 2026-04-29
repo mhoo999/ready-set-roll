@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:www.lovetoknowpets.com)",
+      "WebFetch(domain:barnratsunited.com)",
+      "WebFetch(domain:www.greatbritishracing.com)",
+      "WebFetch(domain:www.joyfulequestrian.com)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(npm list *)",
+      "Bash(pip show *)",
+      "Bash(cargo search *)",
+      "Bash(npm search *)",
+      "WebFetch(domain:github.com)",
+      "Bash(npm install *)",
+      "Bash(qmd --version)",
+      "Bash(qmd --help)"
+    ]
+  }
+}

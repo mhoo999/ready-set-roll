@@ -29,8 +29,8 @@ const WINNER_SAYINGS = [
 const JUST_CAUGHT_UP: Array<string | ((n: string) => string)> = [
   (n: string) => `${n}, 잡았다!`,
   (n: string) => `${n}, 옆에 왔어!`,
-  '같은 줄에 섰다!',
-  '여기까지 왔다!',
+  '드디어 따라잡았어!',
+  '이제 나란히야!',
 ]
 
 const COMBO_LEADER_BIG_GAP = [
@@ -67,8 +67,8 @@ const ACTIVE_SAYINGS = [
 const JUST_LEFT_TIE_WITH_NAME: Array<(n: string) => string> = [
   (n) => `${n} 잘 있어^^`,
   (n) => `${n} 안녕~`,
-  (n) => `${n}, 앞에서 봐요~`,
   (n) => `${n}, 먼저 갈게!`,
+  (n) => `${n}보다 빠르지~`,
 ]
 
 // 같은 칸에서 앞서 나갈 때 — 이름 없는 버전
@@ -76,8 +76,17 @@ const JUST_LEFT_TIE_GENERIC = [
   '먼저 갈게~',
   '나중에 봐!',
   '앞에서 기다릴게~',
-  '바이바이~',
-  '그럼 이만~',
+  '한 발 앞서간다!',
+  '따라올 수 있으면 와봐!',
+]
+
+// 뒤에서 단숨에 단독 1위로 역전할 때
+const JUST_OVERTOOK: Array<string | ((n: string) => string)> = [
+  (n: string) => `${n} 넘어섰다!`,
+  (n: string) => `${n}, 이제 내가 앞이야!`,
+  '한 방에 제쳤어!',
+  '단숨에 앞질렀다!',
+  '이게 바로 역전이야!',
 ]
 
 // 자기 이름 포함 대사
@@ -230,11 +239,14 @@ export default function HorseToken({
   useEffect(() => {
     if (!isActive || isWinner) return
     const justCaughtUp = prevGapRef.current > 0 && gapToLeader === 0 && !isSoleLeader
+    const justOvertook = prevGapRef.current > 0 && isSoleLeader
     const justLeftTie = prevTiedCountRef.current > 0
     const wasAtLeaderPos = prevGapRef.current === 0
 
     if (justCaughtUp) {
       show(resolve(pick(JUST_CAUGHT_UP), leaderName), 2200)
+    } else if (justOvertook) {
+      show(resolve(pick(JUST_OVERTOOK), prevLeaderNameRef.current), 2200)
     } else if (justLeftTie) {
       // 같은 칸에 있다가 앞서 나갈 때
       if (wasAtLeaderPos && prevLeaderNameRef.current !== name) {
