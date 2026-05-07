@@ -225,7 +225,10 @@ export default function HorseToken({
 }: Props) {
   // 파생 상태
   const gapToLeader = leaderPosition - position
-  const isSoleLeader = position === leaderPosition && position > runnerUpPosition
+  // runnerUpPosition 은 leaderPosition 과 같은 값을 가진 다른 동률자도 함께 제외하므로,
+  // (예: 3명일 때 A,B 동률 1등, C 뒤) "position > runnerUpPosition" 만으로는 동률자도
+  // sole leader 로 잘못 판정한다. tiedCount 를 직접 본다.
+  const isSoleLeader = position === leaderPosition && tiedCount === 0
   const leadMargin = isSoleLeader ? position - runnerUpPosition : 0
   const isTiedAtTop = position === leaderPosition && tiedCount > 0   // 1등 자리 동률
   const isBehind = gapToLeader >= Math.max(3, Math.ceil(target * 0.3)) // 격차 큰 추격자→꼴등 처리
