@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 type Props = {
   name: string
+  playerId: string
   isActive: boolean
   isWinner: boolean
   isCombo: boolean
@@ -14,6 +15,16 @@ type Props = {
   leaderPosition: number
   runnerUpPosition: number
   tiedCount: number
+}
+
+// HorseToken 은 player.position 이 바뀔 때마다 셀 단위로 unmount/remount 된다.
+// remount 시 useRef 초기값이 현재값으로 리셋되면 transition 판정이 깨지므로,
+// playerId 별 prev-state 를 모듈 레벨에 영속화한다.
+type PrevState = { gap: number; tiedCount: number; leaderName: string }
+const prevStateStore = new Map<string, PrevState>()
+
+export function resetSpeechBubbleState() {
+  prevStateStore.clear()
 }
 
 const WINNER_SAYINGS = [
@@ -32,6 +43,9 @@ const JUST_CAUGHT_UP: Array<string | ((n: string) => string)> = [
   '드디어 따라잡았어!',
   '이제 나란히야!',
 ]
+
+// 1등 이름이 본인이거나 알 수 없을 때의 폴백 (이름 미언급 풀)
+const JUST_CAUGHT_UP_NO_NAME = ['드디어 따라잡았어!', '이제 나란히야!']
 
 const COMBO_LEADER_BIG_GAP = [
   '따라잡을 수 있으면 와봐~',
@@ -52,6 +66,8 @@ const COMBO_CHASER_CLOSING: Array<string | ((n: string) => string)> = [
   '거리 좁힌다!',
   '곧 따라잡는다!',
 ]
+
+const COMBO_CHASER_NO_NAME = ['거리 좁힌다!', '곧 따라잡는다!']
 
 const ACTIVE_SAYINGS = [
   '이랴!',
@@ -88,6 +104,8 @@ const JUST_OVERTOOK: Array<string | ((n: string) => string)> = [
   '단숨에 앞질렀다!',
   '이게 바로 역전이야!',
 ]
+
+const JUST_OVERTOOK_NO_NAME = ['한 방에 제쳤어!', '단숨에 앞질렀다!', '이게 바로 역전이야!']
 
 // 자기 이름 포함 대사
 const SELF_NAME_SAYINGS: Array<(n: string) => string> = [
@@ -194,6 +212,7 @@ function resolve(s: string | ((n: string) => string), name: string): string {
 
 export default function HorseToken({
   name,
+  playerId,
   isActive,
   isWinner,
   isCombo,
@@ -224,9 +243,12 @@ export default function HorseToken({
   const isBehindRef = useRef(isBehind)
   const gapToLeaderRef = useRef(gapToLeader)
   const leaderPositionRef = useRef(leaderPosition)
-  const prevGapRef = useRef(gapToLeader)
-  const prevTiedCountRef = useRef(tiedCount)
-  const prevLeaderNameRef = useRef(leaderName)
+  // remount 사이에 prev 를 영속화 — 첫 렌더(스토어 비어있음) 에서는 현재값으로 폴백되어
+  // 어떤 transition 분기도 매치되지 않으므로 movement saying 은 안 뜬다 (기존 동작 유지).
+  const stored = prevStateStore.get(playerId)
+  const prevGapRef = useRef(stored?.gap ?? gapToLeader)
+  const prevTiedCountRef = useRef(stored?.tiedCount ?? tiedCount)
+  const prevLeaderNameRef = useRef(stored?.leaderName ?? leaderName)
   const nameRef = useRef(name)
 
   const show = (text: string, duration = 2500) => {
@@ -243,14 +265,32 @@ export default function HorseToken({
     const justLeftTie = prevTiedCountRef.current > 0
     const wasAtLeaderPos = prevGapRef.current === 0
 
+    // 1등 자리 동률에서 본인이 첫 번째로 표시되면 leaderName === name 이 될 수 있음.
+    // 이 경우 "본인이름, ..." 같은 자기-호명 대사가 나오지 않도록 무명 폴백을 쓴다.
+    const safeLeaderName = leaderName && leaderName !== name ? leaderName : ''
+    const safePrevLeaderName =
+      prevLeaderNameRef.current && prevLeaderNameRef.current !== name
+        ? prevLeaderNameRef.current
+        : ''
+
     if (justCaughtUp) {
-      show(resolve(pick(JUST_CAUGHT_UP), leaderName), 2200)
+      show(
+        safeLeaderName
+          ? resolve(pick(JUST_CAUGHT_UP), safeLeaderName)
+          : pick(JUST_CAUGHT_UP_NO_NAME),
+        2200,
+      )
     } else if (justOvertook) {
-      show(resolve(pick(JUST_OVERTOOK), prevLeaderNameRef.current), 2200)
+      show(
+        safePrevLeaderName
+          ? resolve(pick(JUST_OVERTOOK), safePrevLeaderName)
+          : pick(JUST_OVERTOOK_NO_NAME),
+        2200,
+      )
     } else if (justLeftTie) {
       // 같은 칸에 있다가 앞서 나갈 때
-      if (wasAtLeaderPos && prevLeaderNameRef.current !== name) {
-        show(pick(JUST_LEFT_TIE_WITH_NAME)(prevLeaderNameRef.current), 2200)
+      if (wasAtLeaderPos && safePrevLeaderName) {
+        show(pick(JUST_LEFT_TIE_WITH_NAME)(safePrevLeaderName), 2200)
       } else {
         show(pick(JUST_LEFT_TIE_GENERIC), 2200)
       }
@@ -259,7 +299,12 @@ export default function HorseToken({
         const pool = leadMargin >= 4 ? COMBO_LEADER_BIG_GAP : COMBO_LEADER_CLOSE
         show(pick(pool), 2000)
       } else {
-        show(resolve(pick(COMBO_CHASER_CLOSING), leaderName), 2000)
+        show(
+          safeLeaderName
+            ? resolve(pick(COMBO_CHASER_CLOSING), safeLeaderName)
+            : pick(COMBO_CHASER_NO_NAME),
+          2000,
+        )
       }
     } else if (Math.random() < 0.4) {
       // 30% 확률로 자기 이름 대사
@@ -286,9 +331,13 @@ export default function HorseToken({
   useEffect(() => { isBehindRef.current = isBehind })
   useEffect(() => { gapToLeaderRef.current = gapToLeader })
   useEffect(() => { leaderPositionRef.current = leaderPosition })
-  useEffect(() => { prevGapRef.current = gapToLeader })
-  useEffect(() => { prevTiedCountRef.current = tiedCount })
-  useEffect(() => { prevLeaderNameRef.current = leaderName })
+  // prev-state ref + 모듈 스토어 동기화 (remount 사이에 prev 보존)
+  useEffect(() => {
+    prevGapRef.current = gapToLeader
+    prevTiedCountRef.current = tiedCount
+    prevLeaderNameRef.current = leaderName
+    prevStateStore.set(playerId, { gap: gapToLeader, tiedCount, leaderName })
+  })
 
   // 유휴 타이머 (12~20초)
   useEffect(() => {

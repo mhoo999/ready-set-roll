@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { type Player, type GamePhase, parsePlayers, pickWinnerIndex } from '@/lib/gameLogic'
+import { resetSpeechBubbleState } from '@/components/HorseToken'
 
 type GameState = {
   playerNames: string[]
@@ -60,6 +61,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => ({
   startGame: () => {
     const { playerNames } = get()
     const players = parsePlayers(playerNames)
+    resetSpeechBubbleState()
     set({
       players,
       phase: 'START',
@@ -75,6 +77,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => ({
   restartGame: () => {
     const { playerNames } = get()
     const players = parsePlayers(playerNames)
+    resetSpeechBubbleState()
     set({
       players,
       phase: 'START',
@@ -129,7 +132,8 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => ({
     set({ phase: 'DELAY' })
   },
 
-  resetGame: () =>
+  resetGame: () => {
+    resetSpeechBubbleState()
     set({
       players: [],
       phase: 'IDLE',
@@ -139,5 +143,6 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => ({
       pendingWinnerIdx: null,
       history: [],
       rollCount: 0,
-    }),
+    })
+  },
 }))

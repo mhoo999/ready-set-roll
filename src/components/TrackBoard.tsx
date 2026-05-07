@@ -87,6 +87,7 @@ export default function TrackBoard({ players, target, currentRollWinnerId, winne
                         >
                           <HorseToken
                             name={player.name}
+                            playerId={player.id}
                             isActive={isActive}
                             isWinner={isWinner}
                             isCombo={isCombo}
