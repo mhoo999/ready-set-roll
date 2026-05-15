@@ -6,7 +6,7 @@ import { useGameStore } from '@/store/useGameStore'
 type BroadcastMessage = {
   id: string
   text: string
-  type: 'system' | 'hype' | 'result' | 'backward' | 'finish'
+  type: 'system' | 'hype' | 'result' | 'backward' | 'triple' | 'finish'
 }
 
 const EARLY_HYPE = [
@@ -89,10 +89,17 @@ const FALLBACK_RESULT = [
 
 const RESULT_BACKWARD = [
   (name: string) => `😱 어이없는 사고!! [${name}] 선수가 한 칸 뒤로 물러납니다!`,
-  (name: string) => `⚡ 대역전의 변수!! [${name}] 선수, 갑자기 뒤로 밀려납니다!`,
+  (name: string) => `🌀 대역전의 변수!! [${name}] 선수, 갑자기 역주행 합니다!`,
   (name: string) => `💨 아뿔싸! [${name}] 선수가 미끄러지며 한 칸 후퇴합니다!`,
   (name: string) => `🌀 황당한 역주행! [${name}] 선수가 뒤로 한 칸 물러납니다!`,
   (name: string) => `😨 청천벽력!! [${name}] 선수에게 불운이 찾아왔습니다!`,
+]
+
+const RESULT_TRIPLE = [
+  (name: string) => `⚡ 트리플 부스트 炸裂!! [${name}] 선수가 한 번에 세 칸을 날아갑니다!!!`,
+  (name: string) => `🚀 믿기지 않는 장면!! [${name}] 선수, 순식간에 세 칸 점프!!`,
+  (name: string) => `🌪️ 폭발적인 가속!! [${name}] 선수의 트리플이 레이스를 뒤흔듭니다!`,
+  (name: string) => `💥 초대형 이벤트!! [${name}] 선수가 트리플 부스트로 전세를 뒤집습니다!`,
 ]
 
 const getRandom = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)]
@@ -186,13 +193,19 @@ export default function BroadcastPanel() {
 
       for (const entry of newEntries) {
         const isBackward = entry.includes('⬇️')
+        const isTripleEvent = !isBackward && entry.includes('트리플')
         const nameMatch = entry.match(/\]\s(.*?)\s[+-]/)
         const name = nameMatch ? nameMatch[1] : '누군가'
 
         let text = ''
+        let msgType: BroadcastMessage['type'] = 'result'
 
         if (isBackward) {
           text = getRandom(RESULT_BACKWARD)(name)
+          msgType = 'backward'
+        } else if (isTripleEvent) {
+          text = getRandom(RESULT_TRIPLE)(name)
+          msgType = 'triple'
         } else {
           const isCombo = entry.includes('연속')
           const currentPlayer = players.find(p => p.name === name)
@@ -224,9 +237,9 @@ export default function BroadcastPanel() {
         }
 
         newMessages.push({
-          id: Date.now().toString() + Math.random() + (isBackward ? 'back' : 'result'),
+          id: Date.now().toString() + Math.random() + msgType,
           text,
-          type: isBackward ? 'backward' : 'result',
+          type: msgType,
         })
       }
 
@@ -255,6 +268,7 @@ export default function BroadcastPanel() {
             {msg.type === 'hype' && <span className="text-white/60">{msg.text}</span>}
             {msg.type === 'result' && <span className="text-orange-400 drop-shadow-[0_0_8px_rgba(251,146,60,0.6)]">{msg.text}</span>}
             {msg.type === 'backward' && <span className="text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.6)]">{msg.text}</span>}
+            {msg.type === 'triple' && <span className="text-yellow-300 font-black drop-shadow-[0_0_10px_rgba(253,224,71,0.8)]">{msg.text}</span>}
             {msg.type === 'finish' && <span className="text-pink-400 text-lg drop-shadow-[0_0_12px_rgba(244,114,182,0.8)] animate-pulse">{msg.text}</span>}
             {msg.type === 'system' && <span className="text-cyan-400">{msg.text}</span>}
           </div>

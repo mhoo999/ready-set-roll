@@ -6,6 +6,8 @@ export type Player = {
 
 export type GamePhase = 'IDLE' | 'START' | 'ROLLING' | 'RESULT' | 'DELAY' | 'FINISHED'
 
+export type GameEvent = 'NORMAL' | 'COMBO' | 'BACKWARD' | 'TRIPLE'
+
 export function parsePlayers(names: string[]): Player[] {
   return names.map((name, i) => ({ id: String(i), name, position: 0 }))
 }

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { type Player, type GamePhase, parsePlayers, pickWinnerIndex } from '@/lib/gameLogic'
+import { type Player, type GamePhase, type GameEvent, parsePlayers, pickWinnerIndex } from '@/lib/gameLogic'
 import { resetSpeechBubbleState } from '@/components/HorseToken'
 
 type GameState = {
@@ -14,7 +14,7 @@ type GameState = {
   lastWinnerId: string | null
   winnerId: string | null
   currentRollWinnerId: string | null
-  lastMoveBackId: string | null
+  currentEvent: GameEvent | null
   pendingWinnerIdx: number | null
   history: string[]
   rollCount: number
@@ -46,7 +46,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => ({
   lastWinnerId: null,
   winnerId: null,
   currentRollWinnerId: null,
-  lastMoveBackId: null,
+  currentEvent: null,
   pendingWinnerIdx: null,
   history: [],
   rollCount: 0,
@@ -72,7 +72,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => ({
       lastWinnerId: null,
       winnerId: null,
       currentRollWinnerId: null,
-      lastMoveBackId: null,
+      currentEvent: null,
       pendingWinnerIdx: null,
     })
   },
@@ -89,7 +89,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => ({
       lastWinnerId: null,
       winnerId: null,
       currentRollWinnerId: null,
-      lastMoveBackId: null,
+      currentEvent: null,
       pendingWinnerIdx: null,
     })
   },
@@ -98,7 +98,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => ({
   beginRoll: () => {
     const { players } = get()
     const pendingWinnerIdx = pickWinnerIndex(players.length)
-    set({ phase: 'ROLLING', currentRollWinnerId: null, pendingWinnerIdx })
+    set({ phase: 'ROLLING', currentRollWinnerId: null, currentEvent: null, pendingWinnerIdx })
   },
 
   // Use the pre-picked winner — no second random draw
@@ -106,43 +106,51 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => ({
     const { players, lastWinnerId, target, history, rollCount, pendingWinnerIdx } = get()
     const idx = pendingWinnerIdx ?? pickWinnerIndex(players.length)
     const selected = players[idx]
-    const isCombo = selected.id === lastWinnerId
-    const move = isCombo ? 2 : 1
+
+    // Determine event: BACKWARD 5% (position > 1), TRIPLE 3%, then COMBO or NORMAL
+    const rand = Math.random()
+    let gameEvent: GameEvent
+    if (rand < 0.05 && selected.position > 1) {
+      gameEvent = 'BACKWARD'
+    } else if (rand < 0.08) {
+      gameEvent = 'TRIPLE'
+    } else if (selected.id === lastWinnerId) {
+      gameEvent = 'COMBO'
+    } else {
+      gameEvent = 'NORMAL'
+    }
+
+    const move =
+      gameEvent === 'BACKWARD' ? -1 :
+      gameEvent === 'TRIPLE'   ?  3 :
+      gameEvent === 'COMBO'    ?  2 : 1
+
     const newPosition = selected.position + move
     const won = newPosition >= target
 
     const updatedPlayers = players.map((p) =>
       p.id === selected.id ? { ...p, position: newPosition } : p
     )
-    const logEntry = isCombo
-      ? `[${rollCount + 1}] ${selected.name} +2 (연속) → ${newPosition}칸`
-      : `[${rollCount + 1}] ${selected.name} +1 → ${newPosition}칸`
 
-    const newHistory = [...history, logEntry]
-    let finalPlayers = updatedPlayers
-    let moveBackId: string | null = null
-
-    if (!won && Math.random() < 0.05) {
-      const eligible = updatedPlayers.filter(p => p.id !== selected.id && p.position > 1)
-      if (eligible.length > 0) {
-        const backPlayer = eligible[Math.floor(Math.random() * eligible.length)]
-        moveBackId = backPlayer.id
-        const backPosition = backPlayer.position - 1
-        finalPlayers = updatedPlayers.map(p =>
-          p.id === backPlayer.id ? { ...p, position: backPosition } : p
-        )
-        newHistory.push(`[${rollCount + 1}] ${backPlayer.name} -1 → ${backPosition}칸 ⬇️`)
-      }
+    let logEntry: string
+    if (gameEvent === 'BACKWARD') {
+      logEntry = `[${rollCount + 1}] ${selected.name} -1 → ${newPosition}칸 ⬇️`
+    } else if (gameEvent === 'TRIPLE') {
+      logEntry = `[${rollCount + 1}] ${selected.name} +3 (트리플) → ${newPosition}칸 ⚡`
+    } else if (gameEvent === 'COMBO') {
+      logEntry = `[${rollCount + 1}] ${selected.name} +2 (연속) → ${newPosition}칸`
+    } else {
+      logEntry = `[${rollCount + 1}] ${selected.name} +1 → ${newPosition}칸`
     }
 
     set({
-      players: finalPlayers,
+      players: updatedPlayers,
       currentRollWinnerId: selected.id,
       lastWinnerId: selected.id,
-      lastMoveBackId: moveBackId,
+      currentEvent: gameEvent,
       phase: won ? 'FINISHED' : 'RESULT',
       winnerId: won ? selected.id : null,
-      history: newHistory,
+      history: [...history, logEntry],
       rollCount: rollCount + 1,
       pendingWinnerIdx: null,
     })
@@ -162,7 +170,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => ({
       lastWinnerId: null,
       winnerId: null,
       currentRollWinnerId: null,
-      lastMoveBackId: null,
+      currentEvent: null,
       pendingWinnerIdx: null,
       history: [],
       rollCount: 0,
