@@ -6,7 +6,7 @@ import { useGameStore } from '@/store/useGameStore'
 type BroadcastMessage = {
   id: string
   text: string
-  type: 'system' | 'hype' | 'result' | 'finish'
+  type: 'system' | 'hype' | 'result' | 'backward' | 'finish'
 }
 
 const EARLY_HYPE = [
@@ -85,6 +85,14 @@ const RESULT_NORMAL_MID = [
 const FALLBACK_RESULT = [
   (name: string) => `🏃‍♂️ [${name}], 거침없이 치고 나갑니다!`,
   (name: string) => `⚡ [${name}], 멈추지 않는 질주!`,
+]
+
+const RESULT_BACKWARD = [
+  (name: string) => `😱 어이없는 사고!! [${name}] 선수가 한 칸 뒤로 물러납니다!`,
+  (name: string) => `⚡ 대역전의 변수!! [${name}] 선수, 갑자기 뒤로 밀려납니다!`,
+  (name: string) => `💨 아뿔싸! [${name}] 선수가 미끄러지며 한 칸 후퇴합니다!`,
+  (name: string) => `🌀 황당한 역주행! [${name}] 선수가 뒤로 한 칸 물러납니다!`,
+  (name: string) => `😨 청천벽력!! [${name}] 선수에게 불운이 찾아왔습니다!`,
 ]
 
 const getRandom = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)]
@@ -171,53 +179,60 @@ export default function BroadcastPanel() {
   // Result logic based on History changes
   useEffect(() => {
     if (history.length > lastHistoryCount.current) {
-      const lastEntry = history[history.length - 1]
-      // parse "[1] 이름 +1 → 2칸" or "[2] 이름 +2 (연속) → 3칸"
-      const isCombo = lastEntry.includes('연속')
-      const nameMatch = lastEntry.match(/\]\s(.*?)\s\+/)
-      const name = nameMatch ? nameMatch[1] : '누군가'
-      
-      let text = ''
-      
-      const currentPlayer = players.find(p => p.name === name)
-      if (currentPlayer && players.length > 0) {
-        const sorted = [...players].sort((a, b) => b.position - a.position)
-        const maxPos = sorted[0].position
-        const minPos = sorted[sorted.length - 1].position
-        
-        const isFirst = currentPlayer.position === maxPos
-        const isLast = currentPlayer.position === minPos
-        const firstPlaceCount = sorted.filter(p => p.position === maxPos).length
-        const isTiedForFirst = isFirst && firstPlaceCount > 1
-        const isOnlyFirst = isFirst && firstPlaceCount === 1
+      const newEntries = history.slice(lastHistoryCount.current)
+      lastHistoryCount.current = history.length
 
-        if (isCombo) {
-          if (isOnlyFirst) {
-             text = getRandom(RESULT_COMBO_ONLY_FIRST)(name)
-          } else {
-             text = getRandom(RESULT_COMBO_NORMAL)(name)
-          }
+      const newMessages: BroadcastMessage[] = []
+
+      for (const entry of newEntries) {
+        const isBackward = entry.includes('⬇️')
+        const nameMatch = entry.match(/\]\s(.*?)\s[+-]/)
+        const name = nameMatch ? nameMatch[1] : '누군가'
+
+        let text = ''
+
+        if (isBackward) {
+          text = getRandom(RESULT_BACKWARD)(name)
         } else {
-          if (isOnlyFirst) {
-             text = getRandom(RESULT_NORMAL_ONLY_FIRST)(name)
-          } else if (isTiedForFirst) {
-             text = getRandom(RESULT_NORMAL_TIED_FIRST)(name)
-          } else if (isLast) {
-             text = getRandom(RESULT_NORMAL_LAST)(name)
+          const isCombo = entry.includes('연속')
+          const currentPlayer = players.find(p => p.name === name)
+          if (currentPlayer && players.length > 0) {
+            const sorted = [...players].sort((a, b) => b.position - a.position)
+            const maxPos = sorted[0].position
+            const minPos = sorted[sorted.length - 1].position
+
+            const isFirst = currentPlayer.position === maxPos
+            const isLast = currentPlayer.position === minPos
+            const firstPlaceCount = sorted.filter(p => p.position === maxPos).length
+            const isTiedForFirst = isFirst && firstPlaceCount > 1
+            const isOnlyFirst = isFirst && firstPlaceCount === 1
+
+            if (isCombo) {
+              text = isOnlyFirst ? getRandom(RESULT_COMBO_ONLY_FIRST)(name) : getRandom(RESULT_COMBO_NORMAL)(name)
+            } else if (isOnlyFirst) {
+              text = getRandom(RESULT_NORMAL_ONLY_FIRST)(name)
+            } else if (isTiedForFirst) {
+              text = getRandom(RESULT_NORMAL_TIED_FIRST)(name)
+            } else if (isLast) {
+              text = getRandom(RESULT_NORMAL_LAST)(name)
+            } else {
+              text = getRandom(RESULT_NORMAL_MID)(name)
+            }
           } else {
-             text = getRandom(RESULT_NORMAL_MID)(name)
+            text = getRandom(FALLBACK_RESULT)(name)
           }
         }
-      } else {
-        text = getRandom(FALLBACK_RESULT)(name)
+
+        newMessages.push({
+          id: Date.now().toString() + Math.random() + (isBackward ? 'back' : 'result'),
+          text,
+          type: isBackward ? 'backward' : 'result',
+        })
       }
 
-      setMessages(prev => [...prev, {
-        id: Date.now().toString() + 'result',
-        text,
-        type: 'result'
-      }])
-      lastHistoryCount.current = history.length
+      if (newMessages.length > 0) {
+        setMessages(prev => [...prev, ...newMessages])
+      }
     } else if (history.length === 0) {
       // reset when history clears
       lastHistoryCount.current = 0
@@ -239,6 +254,7 @@ export default function BroadcastPanel() {
           >
             {msg.type === 'hype' && <span className="text-white/60">{msg.text}</span>}
             {msg.type === 'result' && <span className="text-orange-400 drop-shadow-[0_0_8px_rgba(251,146,60,0.6)]">{msg.text}</span>}
+            {msg.type === 'backward' && <span className="text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.6)]">{msg.text}</span>}
             {msg.type === 'finish' && <span className="text-pink-400 text-lg drop-shadow-[0_0_12px_rgba(244,114,182,0.8)] animate-pulse">{msg.text}</span>}
             {msg.type === 'system' && <span className="text-cyan-400">{msg.text}</span>}
           </div>

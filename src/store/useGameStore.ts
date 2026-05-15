@@ -14,6 +14,7 @@ type GameState = {
   lastWinnerId: string | null
   winnerId: string | null
   currentRollWinnerId: string | null
+  lastMoveBackId: string | null
   pendingWinnerIdx: number | null
   history: string[]
   rollCount: number
@@ -45,6 +46,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => ({
   lastWinnerId: null,
   winnerId: null,
   currentRollWinnerId: null,
+  lastMoveBackId: null,
   pendingWinnerIdx: null,
   history: [],
   rollCount: 0,
@@ -70,6 +72,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => ({
       lastWinnerId: null,
       winnerId: null,
       currentRollWinnerId: null,
+      lastMoveBackId: null,
       pendingWinnerIdx: null,
     })
   },
@@ -86,6 +89,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => ({
       lastWinnerId: null,
       winnerId: null,
       currentRollWinnerId: null,
+      lastMoveBackId: null,
       pendingWinnerIdx: null,
     })
   },
@@ -114,13 +118,31 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => ({
       ? `[${rollCount + 1}] ${selected.name} +2 (연속) → ${newPosition}칸`
       : `[${rollCount + 1}] ${selected.name} +1 → ${newPosition}칸`
 
+    const newHistory = [...history, logEntry]
+    let finalPlayers = updatedPlayers
+    let moveBackId: string | null = null
+
+    if (!won && Math.random() < 0.05) {
+      const eligible = updatedPlayers.filter(p => p.id !== selected.id && p.position > 1)
+      if (eligible.length > 0) {
+        const backPlayer = eligible[Math.floor(Math.random() * eligible.length)]
+        moveBackId = backPlayer.id
+        const backPosition = backPlayer.position - 1
+        finalPlayers = updatedPlayers.map(p =>
+          p.id === backPlayer.id ? { ...p, position: backPosition } : p
+        )
+        newHistory.push(`[${rollCount + 1}] ${backPlayer.name} -1 → ${backPosition}칸 ⬇️`)
+      }
+    }
+
     set({
-      players: updatedPlayers,
+      players: finalPlayers,
       currentRollWinnerId: selected.id,
       lastWinnerId: selected.id,
+      lastMoveBackId: moveBackId,
       phase: won ? 'FINISHED' : 'RESULT',
       winnerId: won ? selected.id : null,
-      history: [...history, logEntry],
+      history: newHistory,
       rollCount: rollCount + 1,
       pendingWinnerIdx: null,
     })
@@ -140,6 +162,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => ({
       lastWinnerId: null,
       winnerId: null,
       currentRollWinnerId: null,
+      lastMoveBackId: null,
       pendingWinnerIdx: null,
       history: [],
       rollCount: 0,

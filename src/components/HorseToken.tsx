@@ -9,6 +9,7 @@ type Props = {
   isActive: boolean
   isWinner: boolean
   isCombo: boolean
+  isMoveBack: boolean
   leaderName: string
   position: number
   target: number
@@ -185,6 +186,19 @@ const IDLE_LAST = [
 ]
 
 
+const MOVE_BACK_SAYINGS = [
+  '어?! 뒤로 간다고?!',
+  '으악! 미끄러졌어!',
+  '이럴 수가...',
+  '왜 뒤로 가?!',
+  '아니, 이게 무슨...?',
+  '억울해!!',
+  '이건 말도 안 돼!',
+  '꿈이겠지...?',
+  '아니 왜!!!!',
+  '내 탓이 아니야!!',
+]
+
 const IDLE_GENERAL = [
   '이번엔 잘하자!',
   '긴장되는데...',
@@ -216,6 +230,7 @@ export default function HorseToken({
   isActive,
   isWinner,
   isCombo,
+  isMoveBack,
   leaderName,
   position,
   target,
@@ -323,6 +338,11 @@ export default function HorseToken({
   useEffect(() => {
     if (isWinner) show(pick(WINNER_SAYINGS), 3000)
   }, [isWinner]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 뒤로 가기 시
+  useEffect(() => {
+    if (isMoveBack) show(pick(MOVE_BACK_SAYINGS), 2500)
+  }, [isMoveBack]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ===== ref 동기화 (위 핸들러보다 뒤) =====
   useEffect(() => { isActiveRef.current = isActive })

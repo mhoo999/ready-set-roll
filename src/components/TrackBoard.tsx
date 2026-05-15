@@ -10,9 +10,10 @@ type Props = {
   currentRollWinnerId: string | null
   winnerId: string | null
   lastWinnerId: string | null
+  lastMoveBackId: string | null
 }
 
-export default function TrackBoard({ players, target, currentRollWinnerId, winnerId, lastWinnerId }: Props) {
+export default function TrackBoard({ players, target, currentRollWinnerId, winnerId, lastWinnerId, lastMoveBackId }: Props) {
   const positions = players.map(p => p.position)
   const leaderPosition = positions.length ? Math.max(...positions) : 0
   const nonLeaderPositions = positions.filter(p => p !== leaderPosition)
@@ -45,6 +46,7 @@ export default function TrackBoard({ players, target, currentRollWinnerId, winne
             const isActive = player.id === currentRollWinnerId
             const isWinner = player.id === winnerId
             const isCombo = isActive && player.id === lastWinnerId
+            const isMoveBack = player.id === lastMoveBackId
             const tiedCount = players.filter(o => o.id !== player.id && o.position === player.position).length
 
             return (
@@ -52,7 +54,7 @@ export default function TrackBoard({ players, target, currentRollWinnerId, winne
                 key={player.id}
                 className={`
                   flex items-center rounded-lg flex-1 min-h-0 px-2
-                  ${isWinner ? 'bg-yellow-400/10 border border-yellow-400/40' : isActive ? 'bg-purple-500/10 border border-purple-500/30' : 'bg-white/5 border border-white/5'}
+                  ${isWinner ? 'bg-yellow-400/10 border border-yellow-400/40' : isActive ? 'bg-purple-500/10 border border-purple-500/30' : isMoveBack ? 'bg-red-500/10 border border-red-500/30' : 'bg-white/5 border border-white/5'}
                   transition-colors duration-300
                 `}
               >
@@ -61,7 +63,7 @@ export default function TrackBoard({ players, target, currentRollWinnerId, winne
                   <span
                     className={`
                       text-sm font-semibold truncate block
-                      ${isWinner ? 'text-yellow-300' : isActive ? 'text-purple-300' : 'text-white/60'}
+                      ${isWinner ? 'text-yellow-300' : isActive ? 'text-purple-300' : isMoveBack ? 'text-red-400' : 'text-white/60'}
                     `}
                   >
                     {laneIdx + 1}. {player.name}
@@ -91,6 +93,7 @@ export default function TrackBoard({ players, target, currentRollWinnerId, winne
                             isActive={isActive}
                             isWinner={isWinner}
                             isCombo={isCombo}
+                            isMoveBack={isMoveBack}
                             leaderName={leader?.name ?? ''}
                             position={player.position}
                             target={target}
