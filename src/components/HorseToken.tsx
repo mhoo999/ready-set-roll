@@ -10,6 +10,7 @@ type Props = {
   isWinner: boolean
   isCombo: boolean
   isMoveBack: boolean
+  isTriple: boolean
   leaderName: string
   position: number
   target: number
@@ -199,6 +200,16 @@ const MOVE_BACK_SAYINGS = [
   '내 탓이 아니야!!',
 ]
 
+const TRIPLE_SAYINGS = [
+  '세 칸이나?! 대박!!',
+  '트리플!! 신이 나를 도왔어!',
+  '한 번에 세 칸! 이게 실화?',
+  '와! 트리플이다!!',
+  '세 칸 점프! 따라올 수 있어?',
+  '이게 바로 트리플 부스트!',
+  '역대급 이동!!',
+]
+
 const IDLE_GENERAL = [
   '이번엔 잘하자!',
   '긴장되는데...',
@@ -231,6 +242,7 @@ export default function HorseToken({
   isWinner,
   isCombo,
   isMoveBack,
+  isTriple,
   leaderName,
   position,
   target,
@@ -344,6 +356,11 @@ export default function HorseToken({
     if (isMoveBack) show(pick(MOVE_BACK_SAYINGS), 2500)
   }, [isMoveBack]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // 트리플 시
+  useEffect(() => {
+    if (isTriple) show(pick(TRIPLE_SAYINGS), 2500)
+  }, [isTriple]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // ===== ref 동기화 (위 핸들러보다 뒤) =====
   useEffect(() => { isActiveRef.current = isActive })
   useEffect(() => { isWinnerRef.current = isWinner })
@@ -454,18 +471,30 @@ export default function HorseToken({
 
       <motion.div
         animate={
-          isActive
+          isActive && isTriple
+            ? { y: [0, -14, 0, -7, 0], scale: [1, 1.4, 1.1, 1.25, 1] }
+            : isActive && isMoveBack
+            ? { x: [0, -10, 6, -4, 0], scale: [1, 0.85, 1.05, 0.95, 1] }
+            : isActive
             ? { y: [0, -6, 0], scale: [1, 1.15, 1] }
             : isWinner
             ? { scale: [1, 1.2, 1] }
             : {}
         }
-        transition={{ duration: 0.4, ease: 'easeOut' }}
+        transition={{ duration: isTriple ? 0.6 : 0.4, ease: 'easeOut' }}
       >
         <div
           className={`
             text-xl select-none leading-none
-            ${isWinner ? 'drop-shadow-[0_0_6px_rgba(245,166,35,0.9)]' : isActive ? 'drop-shadow-[0_0_6px_rgba(124,58,237,0.9)]' : ''}
+            ${isWinner
+              ? 'drop-shadow-[0_0_6px_rgba(245,166,35,0.9)]'
+              : isActive && isTriple
+              ? 'drop-shadow-[0_0_10px_rgba(245,166,35,0.95)]'
+              : isActive && isMoveBack
+              ? 'drop-shadow-[0_0_8px_rgba(239,68,68,0.9)]'
+              : isActive
+              ? 'drop-shadow-[0_0_6px_rgba(124,58,237,0.9)]'
+              : ''}
           `}
           style={{
             animation: isActive || isWinner ? 'horseRun 0.35s steps(2) infinite' : 'horseRun 0.6s steps(2) infinite',
